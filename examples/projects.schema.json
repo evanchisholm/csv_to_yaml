@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CSV Row",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "start_date": {
+        "type": "string"
+      },
+      "end_date": {
+        "type": "string"
+      },
+      "budget_usd": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "owner_email": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project_id",
+      "title",
+      "start_date",
+      "end_date",
+      "budget_usd",
+      "status",
+      "owner_email"
+    ],
+    "additionalProperties": false
+  }
+}

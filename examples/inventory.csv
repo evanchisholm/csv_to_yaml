@@ -1,0 +1,6 @@
+sku,description,qty_on_hand,reorder_point,supplier,warehouse_bin,hazardous
+BK-4481,Brake Kit Gen4,38,20,VectorParts,A3-17,false
+CN-9920,Coolant Additive 5L,120,60,PolarChem,B1-05,true
+CT-1107,Copper Tubing 50ft,12,25,AlliedMetals,D4-09,false
+FN-7788,Fan Assembly Quiet+,4,8,AeroDyne,C2-02,false
+AD-5522,Adhesive Epoxy Set,86,40,RivetWorks,F1-11,true

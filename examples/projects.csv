@@ -1,0 +1,5 @@
+project_id,title,start_date,end_date,budget_usd,status,owner_email
+P-1001,Onboarding Revamp,2025-01-15,2025-03-30,185000,In Progress,alex.lee@example.com
+P-1002,Data Lake Migration,2024-11-01,2025-06-15,720000,Blocked,riley.tan@example.com
+P-1003,Mobile App Refresh,2024-09-10,2025-02-28,260000,At Risk,casey.ng@example.com
+P-1004,ML Ops Pilot,2025-02-01,2025-05-20,94000,Planned,sam.khan@example.com

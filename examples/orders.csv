@@ -1,0 +1,5 @@
+order_id,customer,items_count,subtotal_usd,tax_rate,state,expedited_shipping,notes
+SO-5012,Lumen Bistro,14,1280.75,0.0825,CA,true,Deliver before brunch service
+SO-5013,Atlas Health,6,342.10,0.0950,WA,false,
+SO-5014,NorthwindSolar,22,19850.00,0.0650,AZ,true,Requires lift-gate truck
+SO-5015,Cascade College,9,2110.89,0.0000,OR,false,Tax exempt certificate on file

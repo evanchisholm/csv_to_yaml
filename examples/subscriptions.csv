@@ -1,0 +1,5 @@
+plan_name,monthly_cost_usd,active_users,features,renewal_date,auto_renew
+Growth+,249,58,"SSO;Custom SLA;Webhook API",2025-04-01,true
+Analytics Pro,399,112,"Attribution;Segment Export",2025-01-20,true
+Starter,49,240,"Dashboards",2024-12-15,false
+Enterprise Elite,899,21,"Dedicated CSM;Private Cluster",2025-05-05,true

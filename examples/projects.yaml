@@ -1,0 +1,28 @@
+- project_id: P-1001
+  title: Onboarding Revamp
+  start_date: '2025-01-15'
+  end_date: '2025-03-30'
+  budget_usd: '185000'
+  status: In Progress
+  owner_email: alex.lee@example.com
+- project_id: P-1002
+  title: Data Lake Migration
+  start_date: '2024-11-01'
+  end_date: '2025-06-15'
+  budget_usd: '720000'
+  status: Blocked
+  owner_email: riley.tan@example.com
+- project_id: P-1003
+  title: Mobile App Refresh
+  start_date: '2024-09-10'
+  end_date: '2025-02-28'
+  budget_usd: '260000'
+  status: At Risk
+  owner_email: casey.ng@example.com
+- project_id: P-1004
+  title: ML Ops Pilot
+  start_date: '2025-02-01'
+  end_date: '2025-05-20'
+  budget_usd: '94000'
+  status: Planned
+  owner_email: sam.khan@example.com

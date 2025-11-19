@@ -1,0 +1,6 @@
+event_name,location,date,start_time,end_time,max_attendees,ticket_price_usd,track
+Product Strategy Lab,Austin,2025-02-09,09:00,16:30,120,325,Leadership
+AI Governance Roundtable,New York,2025-03-21,08:30,13:00,40,0,Executive
+Customer Jam Session,Chicago,2025-01-18,18:00,22:00,200,75,Community
+Partner Enablement Sprint,Remote,2024-12-10,10:00,15:00,300,0,Enablement
+Data Reliability Summit,San Francisco,2025-05-14,08:00,17:45,450,499,Engineering

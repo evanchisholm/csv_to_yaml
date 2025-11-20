@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CSV Row",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "event_name": {
+        "type": "string"
+      },
+      "location": {
+        "type": "string",
+        "enum": [
+          "Austin",
+          "New York",
+          "Chicago",
+          "Remote",
+          "San Francisco"
+        ]
+      },
+      "date": {
+        "type": "string"
+      },
+      "start_time": {
+        "type": "string"
+      },
+      "end_time": {
+        "type": "string"
+      },
+      "max_attendees": {
+        "type": "string"
+      },
+      "ticket_price_usd": {
+        "type": "string"
+      },
+      "track": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "event_name",
+      "location",
+      "date",
+      "start_time",
+      "end_time",
+      "max_attendees",
+      "ticket_price_usd",
+      "track"
+    ],
+    "additionalProperties": false
+  }
+}

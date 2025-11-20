@@ -5,40 +5,40 @@
   "items": {
     "type": "object",
     "properties": {
-      "event_name": {
+      "order_id": {
         "type": "string"
       },
-      "location": {
+      "customer": {
         "type": "string"
       },
-      "date": {
+      "items_count": {
         "type": "string"
       },
-      "start_time": {
+      "subtotal_usd": {
         "type": "string"
       },
-      "end_time": {
+      "tax_rate": {
         "type": "string"
       },
-      "max_attendees": {
+      "state": {
         "type": "string"
       },
-      "ticket_price_usd": {
+      "expedited_shipping": {
         "type": "string"
       },
-      "track": {
+      "notes": {
         "type": "string"
       }
     },
     "required": [
-      "event_name",
-      "location",
-      "date",
-      "start_time",
-      "end_time",
-      "max_attendees",
-      "ticket_price_usd",
-      "track"
+      "order_id",
+      "customer",
+      "items_count",
+      "subtotal_usd",
+      "tax_rate",
+      "state",
+      "expedited_shipping",
+      "notes"
     ],
     "additionalProperties": false
   }

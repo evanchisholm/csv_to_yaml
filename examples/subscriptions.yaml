@@ -1,0 +1,24 @@
+- plan_name: Growth+
+  monthly_cost_usd: '249'
+  active_users: '58'
+  features: SSO;Custom SLA;Webhook API
+  renewal_date: '2025-04-01'
+  auto_renew: 'true'
+- plan_name: Analytics Pro
+  monthly_cost_usd: '399'
+  active_users: '112'
+  features: Attribution;Segment Export
+  renewal_date: '2025-01-20'
+  auto_renew: 'true'
+- plan_name: Starter
+  monthly_cost_usd: '49'
+  active_users: '240'
+  features: Dashboards
+  renewal_date: '2024-12-15'
+  auto_renew: 'false'
+- plan_name: Enterprise Elite
+  monthly_cost_usd: '899'
+  active_users: '21'
+  features: Dedicated CSM;Private Cluster
+  renewal_date: '2025-05-05'
+  auto_renew: 'true'

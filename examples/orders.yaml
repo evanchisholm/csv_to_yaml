@@ -1,0 +1,32 @@
+- order_id: SO-5012
+  customer: Lumen Bistro
+  items_count: '14'
+  subtotal_usd: '1280.75'
+  tax_rate: '0.0825'
+  state: CA
+  expedited_shipping: 'true'
+  notes: Deliver before brunch service
+- order_id: SO-5013
+  customer: Atlas Health
+  items_count: '6'
+  subtotal_usd: '342.10'
+  tax_rate: '0.0950'
+  state: WA
+  expedited_shipping: 'false'
+  notes: ''
+- order_id: SO-5014
+  customer: NorthwindSolar
+  items_count: '22'
+  subtotal_usd: '19850.00'
+  tax_rate: '0.0650'
+  state: AZ
+  expedited_shipping: 'true'
+  notes: Requires lift-gate truck
+- order_id: SO-5015
+  customer: Cascade College
+  items_count: '9'
+  subtotal_usd: '2110.89'
+  tax_rate: '0.0000'
+  state: OR
+  expedited_shipping: 'false'
+  notes: Tax exempt certificate on file

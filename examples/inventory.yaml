@@ -1,0 +1,35 @@
+- sku: BK-4481
+  description: Brake Kit Gen4
+  qty_on_hand: '38'
+  reorder_point: '20'
+  supplier: VectorParts
+  warehouse_bin: A3-17
+  hazardous: 'false'
+- sku: CN-9920
+  description: Coolant Additive 5L
+  qty_on_hand: '120'
+  reorder_point: '60'
+  supplier: PolarChem
+  warehouse_bin: B1-05
+  hazardous: 'true'
+- sku: CT-1107
+  description: Copper Tubing 50ft
+  qty_on_hand: '12'
+  reorder_point: '25'
+  supplier: AlliedMetals
+  warehouse_bin: D4-09
+  hazardous: 'false'
+- sku: FN-7788
+  description: Fan Assembly Quiet+
+  qty_on_hand: '4'
+  reorder_point: '8'
+  supplier: AeroDyne
+  warehouse_bin: C2-02
+  hazardous: 'false'
+- sku: AD-5522
+  description: Adhesive Epoxy Set
+  qty_on_hand: '86'
+  reorder_point: '40'
+  supplier: RivetWorks
+  warehouse_bin: F1-11
+  hazardous: 'true'

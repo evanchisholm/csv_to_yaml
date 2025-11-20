@@ -1,40 +1,40 @@
 - event_name: Product Strategy Lab
   location: Austin
-  date: "2025-02-09"
+  date: '2025-02-09'
   start_time: 09:00
-  end_time: "16:30"
-  max_attendees: "120"
-  ticket_price_usd: "325"
-  track: Community
+  end_time: '16:30'
+  max_attendees: '120'
+  ticket_price_usd: '325'
+  track: Leadership
 - event_name: AI Governance Roundtable
   location: New York
-  date: "2025-03-21"
+  date: '2025-03-21'
   start_time: 08:30
-  end_time: "13:00"
-  max_attendees: "40"
-  ticket_price_usd: "0"
+  end_time: '13:00'
+  max_attendees: '40'
+  ticket_price_usd: '0'
   track: Executive
 - event_name: Customer Jam Session
   location: Chicago
-  date: "2025-01-18"
-  start_time: "18:00"
-  end_time: "22:00"
-  max_attendees: "200"
-  ticket_price_usd: "75"
+  date: '2025-01-18'
+  start_time: '18:00'
+  end_time: '22:00'
+  max_attendees: '200'
+  ticket_price_usd: '75'
   track: Community
 - event_name: Partner Enablement Sprint
   location: Remote
-  date: "2024-12-10"
-  start_time: "10:00"
-  end_time: "15:00"
-  max_attendees: "300"
-  ticket_price_usd: "0"
+  date: '2024-12-10'
+  start_time: '10:00'
+  end_time: '15:00'
+  max_attendees: '300'
+  ticket_price_usd: '0'
   track: Enablement
 - event_name: Data Reliability Summit
   location: San Francisco
-  date: "2025-05-14"
+  date: '2025-05-14'
   start_time: 08:00
-  end_time: "17:45"
-  max_attendees: "450"
-  ticket_price_usd: "499"
+  end_time: '17:45'
+  max_attendees: '450'
+  ticket_price_usd: '499'
   track: Engineering

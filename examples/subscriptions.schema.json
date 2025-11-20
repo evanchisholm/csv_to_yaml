@@ -5,40 +5,32 @@
   "items": {
     "type": "object",
     "properties": {
-      "event_name": {
+      "plan_name": {
         "type": "string"
       },
-      "location": {
+      "monthly_cost_usd": {
         "type": "string"
       },
-      "date": {
+      "active_users": {
         "type": "string"
       },
-      "start_time": {
+      "features": {
         "type": "string"
       },
-      "end_time": {
+      "renewal_date": {
         "type": "string"
       },
-      "max_attendees": {
-        "type": "string"
-      },
-      "ticket_price_usd": {
-        "type": "string"
-      },
-      "track": {
+      "auto_renew": {
         "type": "string"
       }
     },
     "required": [
-      "event_name",
-      "location",
-      "date",
-      "start_time",
-      "end_time",
-      "max_attendees",
-      "ticket_price_usd",
-      "track"
+      "plan_name",
+      "monthly_cost_usd",
+      "active_users",
+      "features",
+      "renewal_date",
+      "auto_renew"
     ],
     "additionalProperties": false
   }

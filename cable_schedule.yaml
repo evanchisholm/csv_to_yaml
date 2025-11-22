@@ -1,0 +1,96 @@
+version: 1
+patch_panels:
+- id: PP01
+  rack: RACK-A
+  type: 24-port Cat6 Patch Panel
+  ports:
+    1:
+      label: A01
+    2:
+      label: A02
+    3:
+      label: A03
+    4:
+      label: A04
+    5:
+      label: A05
+    6:
+      label: A06
+    7:
+      label: A07
+    8:
+      label: A08
+    9:
+      label: A09
+    10:
+      label: A10
+    11:
+      label: A11
+    12:
+      label: A12
+outlets:
+- id: WJ-101-A
+  location: "Room 101 \u2013 Desk A"
+  faceplate: FP-101
+  port: 1
+- id: WJ-101-B
+  location: "Room 101 \u2013 Desk B"
+  faceplate: FP-101
+  port: 2
+devices:
+- id: SW01
+  rack: RACK-A
+  model: Cisco C9300
+  ports:
+  - name: Gi1/0/1
+    type: ethernet
+  - name: Gi1/0/2
+    type: ethernet
+cables:
+- id: CABLE-001
+  type: cat6
+  colour: blue
+  length_m: 18
+  from:
+    type: outlet
+    id: WJ-101-A
+  to:
+    type: patch_panel
+    panel_id: PP01
+    port: 1
+- id: CABLE-002
+  type: cat6
+  colour: blue
+  length_m: 19
+  from:
+    type: outlet
+    id: WJ-101-B
+  to:
+    type: patch_panel
+    panel_id: PP01
+    port: 2
+patch_leads:
+- id: LEAD-01
+  type: cat6
+  colour: yellow
+  length_m: 1
+  from:
+    type: patch_panel
+    panel_id: PP01
+    port: 1
+  to:
+    type: device_port
+    device_id: SW01
+    port: Gi1/0/1
+- id: LEAD-02
+  type: cat6
+  colour: yellow
+  length_m: 1
+  from:
+    type: patch_panel
+    panel_id: PP01
+    port: 2
+  to:
+    type: device_port
+    device_id: SW01
+    port: Gi1/0/2

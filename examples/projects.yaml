@@ -1,4 +1,4 @@
-- project_id: P-1001
+- project_id: P-1005
   title: Onboarding Revamp
   start_date: '2025-01-15'
   end_date: '2025-03-30'
@@ -12,7 +12,7 @@
   budget_usd: '720000'
   status: Blocked
   owner_email: riley.tan@example.com
-- project_id: P-1003
+- project_id: P-1006
   title: Mobile App Refresh
   start_date: '2024-09-10'
   end_date: '2025-02-28'

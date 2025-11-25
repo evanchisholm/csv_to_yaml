@@ -162,6 +162,18 @@ def validate_yaml(yaml_file: Path, schema_file: Path) -> None:
     validator.validate(data)
 
 
+def collect_all_validation_errors(yaml_file: Path, schema_file: Path) -> list[ValidationError]:
+    """Collect all validation errors from a YAML file.
+    
+    Returns:
+        List of ValidationError objects. Empty list if validation passes.
+    """
+    data = load_yaml(yaml_file)
+    schema = load_schema(schema_file)
+    validator = Draft202012Validator(schema)
+    return list(validator.iter_errors(data))
+
+
 def format_validation_error(error: ValidationError, yaml_file: Path) -> str:
     """Format a ValidationError with path and line number information."""
     # Load YAML with positions for line number tracking
@@ -181,12 +193,15 @@ def format_validation_error(error: ValidationError, yaml_file: Path) -> str:
 
 def main() -> None:
     args = parse_args()
-    try:
-        validate_yaml(args.yaml_file, args.schema_file)
-    except ValidationError as exc:
-        error_msg = format_validation_error(exc, args.yaml_file)
-        print(f"Validation failed: {error_msg}", file=sys.stderr)
+    errors = collect_all_validation_errors(args.yaml_file, args.schema_file)
+    
+    if errors:
+        print(f"Validation failed with {len(errors)} error(s):", file=sys.stderr)
+        for i, error in enumerate(errors, 1):
+            error_msg = format_validation_error(error, args.yaml_file)
+            print(f"  {i}. {error_msg}", file=sys.stderr)
         sys.exit(1)
+    
     print("Validation succeeded.")
 
 

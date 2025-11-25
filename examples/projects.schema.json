@@ -6,7 +6,13 @@
     "type": "object",
     "properties": {
       "project_id": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "P-1001",
+          "P-1002",
+          "P-1003",
+          "P-1004"
+        ]
       },
       "title": {
         "type": "string"

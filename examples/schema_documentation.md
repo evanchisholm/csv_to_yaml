@@ -30,7 +30,7 @@ This schema contains **7** table(s):
 | `state` | `VARCHAR(50)` | No | - | NOT NULL |
 | `postal_code` | `VARCHAR(20)` | No | - | NOT NULL |
 | `country` | `VARCHAR(50)` | No | USA | NOT NULL |
-| `is_default` | `BOOLEAN` | No | BOOLEAN NOT NULL DEFAULT FALSE | NOT NULL |
+| `is_default` | `BOOLEAN` | No | BOOLEAN | NOT NULL |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
 
 **Foreign Keys:**
@@ -101,7 +101,7 @@ This schema contains **7** table(s):
 | `order_id` | `SERIAL` | Yes | - | PK |
 | `user_id` | `UUID` | No | - | NOT NULL |
 | `order_number` | `VARCHAR(50)` | No | - | UNIQUE, NOT NULL |
-| `status` | `VARCHAR(20)` | No | pending' CHECK (status IN ('pending | NOT NULL |
+| `status` | `VARCHAR(20)` | No | pending | NOT NULL |
 | `total_amount` | `DECIMAL(10, 2)` | No | - | NOT NULL |
 | `shipping_address` | `TEXT` | No | - | NOT NULL |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
@@ -132,7 +132,7 @@ This schema contains **7** table(s):
 | `description` | `TEXT` | Yes | - | - |
 | `sku` | `VARCHAR(100)` | No | - | UNIQUE, NOT NULL |
 | `price` | `DECIMAL(10, 2)` | No | - | NOT NULL |
-| `stock_quantity` | `INTEGER` | No | 0 CHECK (stock_quantity >= 0 | NOT NULL |
+| `stock_quantity` | `INTEGER` | No | 0 | NOT NULL |
 | `category_id` | `INTEGER` | No | - | NOT NULL |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
@@ -185,7 +185,7 @@ This schema contains **7** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints |
 |-------------|-----------|----------|---------|-------------|
-| `user_id` | `UUID` | Yes | uuid_generate_v4( | PK |
+| `user_id` | `UUID` | Yes | uuid_generate_v4() | PK |
 | `username` | `VARCHAR(50)` | No | - | UNIQUE, NOT NULL |
 | `email` | `VARCHAR(255)` | No | - | UNIQUE, NOT NULL |
 | `password_hash` | `VARCHAR(255)` | No | - | NOT NULL |

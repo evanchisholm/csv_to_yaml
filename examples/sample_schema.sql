@@ -47,11 +47,15 @@ CREATE TABLE public.products (
     stock_quantity INTEGER NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
     category_id INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES public.categories(category_id) ON DELETE RESTRICT
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.products IS 'Product catalog with inventory tracking';
+
+-- Add foreign key constraint via ALTER TABLE
+ALTER TABLE public.products
+    ADD CONSTRAINT fk_product_category
+    FOREIGN KEY (category_id) REFERENCES public.categories(category_id) ON DELETE RESTRICT;
 
 -- Table: orders
 -- Customer orders
@@ -63,11 +67,15 @@ CREATE TABLE public.orders (
     total_amount DECIMAL(10, 2) NOT NULL CHECK (total_amount >= 0),
     shipping_address TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.orders IS 'Customer orders with status tracking';
+
+-- Add foreign key constraint via ALTER TABLE
+ALTER TABLE public.orders
+    ADD CONSTRAINT fk_order_user
+    FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 -- Table: order_items
 -- Items within an order
@@ -78,12 +86,19 @@ CREATE TABLE public.order_items (
     quantity INTEGER NOT NULL CHECK (quantity > 0),
     unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
     subtotal DECIMAL(10, 2) NOT NULL GENERATED ALWAYS AS (quantity * unit_price) STORED,
-    CONSTRAINT fk_order_item_order FOREIGN KEY (order_id) REFERENCES public.orders(order_id) ON DELETE CASCADE,
-    CONSTRAINT fk_order_item_product FOREIGN KEY (product_id) REFERENCES public.products(product_id) ON DELETE RESTRICT,
     CONSTRAINT uk_order_product UNIQUE (order_id, product_id)
 );
 
 COMMENT ON TABLE public.order_items IS 'Individual line items within an order';
+
+-- Add foreign key constraints via ALTER TABLE
+ALTER TABLE public.order_items
+    ADD CONSTRAINT fk_order_item_order
+    FOREIGN KEY (order_id) REFERENCES public.orders(order_id) ON DELETE CASCADE;
+
+ALTER TABLE public.order_items
+    ADD CONSTRAINT fk_order_item_product
+    FOREIGN KEY (product_id) REFERENCES public.products(product_id) ON DELETE RESTRICT;
 
 -- Table: reviews
 -- Product reviews by users
@@ -96,12 +111,19 @@ CREATE TABLE public.reviews (
     comment TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_review_product FOREIGN KEY (product_id) REFERENCES public.products(product_id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE,
     CONSTRAINT uk_user_product_review UNIQUE (user_id, product_id)
 );
 
 COMMENT ON TABLE public.reviews IS 'Product reviews and ratings from users';
+
+-- Add foreign key constraints via ALTER TABLE
+ALTER TABLE public.reviews
+    ADD CONSTRAINT fk_review_product
+    FOREIGN KEY (product_id) REFERENCES public.products(product_id) ON DELETE CASCADE;
+
+ALTER TABLE public.reviews
+    ADD CONSTRAINT fk_review_user
+    FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 -- Table: addresses
 -- User shipping addresses
@@ -115,11 +137,15 @@ CREATE TABLE public.addresses (
     postal_code VARCHAR(20) NOT NULL,
     country VARCHAR(50) NOT NULL DEFAULT 'USA',
     is_default BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_address_user FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.addresses IS 'User shipping and billing addresses';
+
+-- Add foreign key constraint via ALTER TABLE
+ALTER TABLE public.addresses
+    ADD CONSTRAINT fk_address_user
+    FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
 -- Create indexes for performance
 CREATE INDEX idx_products_category ON public.products(category_id);

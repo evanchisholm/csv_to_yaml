@@ -69,6 +69,9 @@ class SchemaParser:
         # Extract table definitions (includes foreign keys now)
         self._parse_tables(normalized)
 
+        # Extract foreign keys from ALTER TABLE statements
+        self._parse_alter_table_foreign_keys(normalized)
+
         # Extract indexes
         self._parse_indexes(normalized)
 
@@ -277,6 +280,45 @@ class SchemaParser:
             foreign_keys.append(fk)
 
         return foreign_keys
+
+    def _parse_alter_table_foreign_keys(self, sql: str) -> None:
+        """Parse FOREIGN KEY constraints added via ALTER TABLE statements."""
+        # Match ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY ...
+        # Pattern handles both single-line and multi-line ALTER TABLE statements
+        alter_pattern = (
+            r"ALTER\s+TABLE\s+(?:(\w+)\.)?(\w+)\s+"
+            r"ADD\s+CONSTRAINT\s+(\w+)\s+"
+            r"FOREIGN\s+KEY\s*\(\s*([^)]+)\s*\)\s*"
+            r"REFERENCES\s+(?:(\w+)\.)?(\w+)\s*\(\s*([^)]+)\s*\)"
+        )
+        matches = re.finditer(alter_pattern, sql, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            table_schema = match.group(1) or "public"
+            table_name = match.group(2)
+            constraint_name = match.group(3)
+            from_cols_str = match.group(4)
+            ref_schema = match.group(5) or "public"
+            ref_table = match.group(6)
+            to_cols_str = match.group(7)
+
+            from_cols = [col.strip().strip('"') for col in from_cols_str.split(",")]
+            to_cols = [col.strip().strip('"') for col in to_cols_str.split(",")]
+
+            full_table_name = f"{table_schema}.{table_name}" if table_schema != "public" else table_name
+            ref_table_full = f"{ref_schema}.{ref_table}" if ref_schema != "public" else ref_table
+
+            # Only add if table exists
+            if full_table_name in self.tables:
+                fk = ForeignKey(
+                    from_table=full_table_name,
+                    from_columns=from_cols,
+                    to_table=ref_table_full,
+                    to_columns=to_cols,
+                    constraint_name=constraint_name,
+                )
+                self.tables[full_table_name].foreign_keys.append(fk)
+                self.relationships.append(fk)
 
     def _parse_indexes(self, sql: str) -> None:
         """Parse CREATE INDEX statements."""

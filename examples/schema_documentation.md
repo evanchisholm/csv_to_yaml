@@ -1,22 +1,27 @@
 # Database Schema Documentation
 
-## Entity Overview
+<h2 id="table-list">Entity Overview</h2>
 
 This schema contains **9** table(s):
 
-- `addresses` (PK: address_id)
-- `categories` (PK: category_id)
-- `discounts` (PK: discount_id)
-- `inventory` (PK: inventory_id)
-- `order_items` (PK: order_item_id)
-- `orders` (PK: order_id)
-- `products` (PK: product_id)
-- `reviews` (PK: review_id)
-- `users` (PK: user_id)
+- [`addresses`](#addresses) (PK: address_id)
+- [`categories`](#categories) (PK: category_id)
+- [`discounts`](#discounts) (PK: discount_id)
+- [`inventory`](#inventory) (PK: inventory_id)
+- [`order_items`](#order-items) (PK: order_item_id)
+- [`orders`](#orders) (PK: order_id)
+- [`products`](#products) (PK: product_id)
+- [`reviews`](#reviews) (PK: review_id)
+- [`users`](#users) (PK: user_id)
 
 ## Tables
 
+<a name="addresses"></a>
+
 ### addresses
+
+[↑ Back to Table List](#table-list)
+
 
 *User shipping and billing addresses*
 
@@ -45,7 +50,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="categories"></a>
+
 ### categories
+
+[↑ Back to Table List](#table-list)
+
 
 *Hierarchical product categories with self-referencing parent relationship*
 
@@ -65,7 +75,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="discounts"></a>
+
 ### discounts
+
+[↑ Back to Table List](#table-list)
+
 
 *Discount codes with complex table-level validation rules*
 
@@ -92,7 +107,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="inventory"></a>
+
 ### inventory
+
+[↑ Back to Table List](#table-list)
+
 
 *Product inventory with table-level validation constraints*
 
@@ -125,7 +145,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="order-items"></a>
+
 ### order_items
+
+[↑ Back to Table List](#table-list)
+
 
 *Individual line items within an order*
 
@@ -152,7 +177,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="orders"></a>
+
 ### orders
+
+[↑ Back to Table List](#table-list)
+
 
 *Customer orders with status tracking*
 
@@ -184,7 +214,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="products"></a>
+
 ### products
+
+[↑ Back to Table List](#table-list)
+
 
 *Product catalog with inventory tracking*
 
@@ -217,7 +252,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="reviews"></a>
+
 ### reviews
+
+[↑ Back to Table List](#table-list)
+
 
 *Product reviews and ratings from users*
 
@@ -249,7 +289,12 @@ This schema contains **9** table(s):
 
 ---
 
+<a name="users"></a>
+
 ### users
+
+[↑ Back to Table List](#table-list)
+
 
 *User accounts table storing authentication and profile information*
 

@@ -598,24 +598,46 @@ class SchemaParser:
                 self.tables[full_table_name].comment = comment
 
 
+def _make_anchor_id(text: str) -> str:
+    """Convert text to a markdown/anchor-friendly ID."""
+    # Convert to lowercase, replace spaces and dots with hyphens, remove special chars
+    import re
+    anchor = text.lower()
+    anchor = re.sub(r'[^\w\s-]', '', anchor)  # Remove special chars except word chars, spaces, hyphens
+    anchor = re.sub(r'[\s._]+', '-', anchor)  # Replace spaces, dots, underscores with hyphens
+    anchor = re.sub(r'-+', '-', anchor)  # Collapse multiple hyphens
+    anchor = anchor.strip('-')  # Remove leading/trailing hyphens
+    return anchor
+
+
 def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path] = None) -> str:
     """Generate markdown documentation for the schema."""
-    lines = ["# Database Schema Documentation\n"]
-
-    # Entity Overview
-    lines.append("## Entity Overview\n")
+    lines = []
+    
+    lines.append("# Database Schema Documentation\n")
+    
+    # Entity Overview with anchor - use HTML heading with ID for better markdown compatibility
+    lines.append('<h2 id="table-list">Entity Overview</h2>\n')
     lines.append(f"This schema contains **{len(tables)}** table(s):\n")
     for table_name in sorted(tables.keys()):
         table = tables[table_name]
         pk_info = f" (PK: {', '.join(table.primary_key_columns)})" if table.primary_key_columns else ""
-        lines.append(f"- `{table_name}`{pk_info}")
+        anchor_id = _make_anchor_id(table_name)
+        lines.append(f"- [`{table_name}`](#{anchor_id}){pk_info}")
     lines.append("")
 
     # Detailed Table Information
     lines.append("## Tables\n")
     for table_name in sorted(tables.keys()):
         table = tables[table_name]
+        anchor_id = _make_anchor_id(table_name)
+        # Add anchor before heading for markdown compatibility
+        lines.append(f'<a name="{anchor_id}"></a>\n')
         lines.append(f"### {table_name}\n")
+        
+        # Add back to table list link
+        lines.append(f"[↑ Back to Table List](#table-list)\n")
+        lines.append("")
 
         if table.comment:
             lines.append(f"*{table.comment}*\n")
@@ -751,15 +773,16 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
     lines.append('<h1>Database Schema Documentation</h1>')
     lines.append('')
     
-    # Entity Overview
-    lines.append('<h2>Entity Overview</h2>')
+    # Entity Overview with anchor
+    lines.append('<h2 id="table-list">Entity Overview</h2>')
     lines.append(f'<p>This schema contains <strong>{len(tables)}</strong> table(s):</p>')
     lines.append('<ul>')
     for table_name in sorted(tables.keys()):
         table = tables[table_name]
         pk_info = f' <em>(PK: {", ".join(table.primary_key_columns)})</em>' if table.primary_key_columns else ""
         table_name_escaped = escape_html(table_name)
-        lines.append(f'<li><code>{table_name_escaped}</code>{pk_info}</li>')
+        anchor_id = _make_anchor_id(table_name)
+        lines.append(f'<li><a href="#{anchor_id}"><code>{table_name_escaped}</code></a>{pk_info}</li>')
     lines.append('</ul>')
     lines.append('')
     
@@ -768,7 +791,14 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
     for table_name in sorted(tables.keys()):
         table = tables[table_name]
         table_name_escaped = escape_html(table_name)
-        lines.append(f'<h3>{table_name_escaped}</h3>')
+        anchor_id = _make_anchor_id(table_name)
+        lines.append(f'<h3 id="{anchor_id}">{table_name_escaped}</h3>')
+        lines.append('')
+        
+        # Add back to table list link
+        lines.append('<p>')
+        lines.append(f'<a href="#table-list">↑ Back to Table List</a>')
+        lines.append('</p>')
         lines.append('')
         
         if table.comment:

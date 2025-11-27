@@ -2,22 +2,26 @@
 
 <h1>Database Schema Documentation</h1>
 
-<h2>Entity Overview</h2>
+<h2 id="table-list">Entity Overview</h2>
 <p>This schema contains <strong>9</strong> table(s):</p>
 <ul>
-<li><code>addresses</code> <em>(PK: address_id)</em></li>
-<li><code>categories</code> <em>(PK: category_id)</em></li>
-<li><code>discounts</code> <em>(PK: discount_id)</em></li>
-<li><code>inventory</code> <em>(PK: inventory_id)</em></li>
-<li><code>order_items</code> <em>(PK: order_item_id)</em></li>
-<li><code>orders</code> <em>(PK: order_id)</em></li>
-<li><code>products</code> <em>(PK: product_id)</em></li>
-<li><code>reviews</code> <em>(PK: review_id)</em></li>
-<li><code>users</code> <em>(PK: user_id)</em></li>
+<li><a href="#addresses"><code>addresses</code></a> <em>(PK: address_id)</em></li>
+<li><a href="#categories"><code>categories</code></a> <em>(PK: category_id)</em></li>
+<li><a href="#discounts"><code>discounts</code></a> <em>(PK: discount_id)</em></li>
+<li><a href="#inventory"><code>inventory</code></a> <em>(PK: inventory_id)</em></li>
+<li><a href="#order-items"><code>order_items</code></a> <em>(PK: order_item_id)</em></li>
+<li><a href="#orders"><code>orders</code></a> <em>(PK: order_id)</em></li>
+<li><a href="#products"><code>products</code></a> <em>(PK: product_id)</em></li>
+<li><a href="#reviews"><code>reviews</code></a> <em>(PK: review_id)</em></li>
+<li><a href="#users"><code>users</code></a> <em>(PK: user_id)</em></li>
 </ul>
 
 <h2>Tables</h2>
-<h3>addresses</h3>
+<h3 id="addresses">addresses</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>User shipping and billing addresses</em></p>
 
@@ -35,6 +39,7 @@
 <tr><td class="confluenceTd"><code>country</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">USA</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>is_default</code></td><td class="confluenceTd"><code>BOOLEAN</code></td><td class="confluenceTd">No</td><td class="confluenceTd">BOOLEAN</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</tbody>
 </table>
 
 <p><strong>Table CHECK Constraints:</strong></p>
@@ -49,7 +54,11 @@
 
 <hr>
 
-<h3>categories</h3>
+<h3 id="categories">categories</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Hierarchical product categories with self-referencing parent relationship</em></p>
 
@@ -62,6 +71,7 @@
 <tr><td class="confluenceTd"><code>description</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
 <tr><td class="confluenceTd"><code>parent_category_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
 <tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</tbody>
 </table>
 
 <p><strong>Foreign Keys:</strong></p>
@@ -71,7 +81,11 @@
 
 <hr>
 
-<h3>discounts</h3>
+<h3 id="discounts">discounts</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Discount codes with complex table-level validation rules</em></p>
 
@@ -88,6 +102,7 @@
 <tr><td class="confluenceTd"><code>start_date</code></td><td class="confluenceTd"><code>DATE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>end_date</code></td><td class="confluenceTd"><code>DATE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>usage_limit</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+</tbody>
 </table>
 
 <p><strong>Table CHECK Constraints:</strong></p>
@@ -100,7 +115,11 @@
 
 <hr>
 
-<h3>inventory</h3>
+<h3 id="inventory">inventory</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Product inventory with table-level validation constraints</em></p>
 
@@ -116,6 +135,7 @@
 <tr><td class="confluenceTd"><code>reorder_level</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>max_stock_level</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>last_count_date</code></td><td class="confluenceTd"><code>DATE</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+</tbody>
 </table>
 
 <p><strong>Table CHECK Constraints:</strong></p>
@@ -137,7 +157,11 @@
 
 <hr>
 
-<h3>order_items</h3>
+<h3 id="order-items">order_items</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Individual line items within an order</em></p>
 
@@ -151,6 +175,7 @@
 <tr><td class="confluenceTd"><code>quantity</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>unit_price</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>subtotal</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+</tbody>
 </table>
 
 <p><strong>Column CHECK Constraints:</strong></p>
@@ -167,7 +192,11 @@
 
 <hr>
 
-<h3>orders</h3>
+<h3 id="orders">orders</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Customer orders with status tracking</em></p>
 
@@ -183,6 +212,7 @@
 <tr><td class="confluenceTd"><code>shipping_address</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</tbody>
 </table>
 
 <p><strong>Column CHECK Constraints:</strong></p>
@@ -203,7 +233,11 @@
 
 <hr>
 
-<h3>products</h3>
+<h3 id="products">products</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Product catalog with inventory tracking</em></p>
 
@@ -220,6 +254,7 @@
 <tr><td class="confluenceTd"><code>category_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</tbody>
 </table>
 
 <p><strong>Column CHECK Constraints:</strong></p>
@@ -240,7 +275,11 @@
 
 <hr>
 
-<h3>reviews</h3>
+<h3 id="reviews">reviews</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>Product reviews and ratings from users</em></p>
 
@@ -256,6 +295,7 @@
 <tr><td class="confluenceTd"><code>comment</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
 <tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</tbody>
 </table>
 
 <p><strong>Column CHECK Constraints:</strong></p>
@@ -276,7 +316,11 @@
 
 <hr>
 
-<h3>users</h3>
+<h3 id="users">users</h3>
+
+<p>
+<a href="#table-list">↑ Back to Table List</a>
+</p>
 
 <p><em>User accounts table storing authentication and profile information</em></p>
 
@@ -294,6 +338,7 @@
 <tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>is_active</code></td><td class="confluenceTd"><code>BOOLEAN</code></td><td class="confluenceTd">No</td><td class="confluenceTd">TRUE</td><td class="confluenceTd">NOT NULL</td></tr>
 <tr><td class="confluenceTd"><code>last_login</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+</tbody>
 </table>
 
 <p><strong>Table CHECK Constraints:</strong></p>

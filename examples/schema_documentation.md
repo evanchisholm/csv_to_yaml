@@ -29,15 +29,15 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `address_id` | `SERIAL` | Yes | - | PK | - | - |
-| `user_id` | `UUID` | No | - | NOT NULL | - | - |
+| `address_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
+| `user_id` | `UUID NOT NULL` | No | - | NOT NULL | - | - |
 | `label` | `VARCHAR(50)` | No | - | NOT NULL | - | - |
 | `street_address` | `VARCHAR(255)` | No | - | NOT NULL | - | - |
 | `city` | `VARCHAR(100)` | No | - | NOT NULL | - | - |
 | `state` | `VARCHAR(50)` | No | - | NOT NULL | - | - |
 | `postal_code` | `VARCHAR(20)` | No | - | NOT NULL | - | - |
 | `country` | `VARCHAR(50)` | No | USA | NOT NULL | - | - |
-| `is_default` | `BOOLEAN` | No | BOOLEAN | NOT NULL | - | - |
+| `is_default` | `BOOLEAN NOT NULL DEFAULT FALSE` | No | BOOLEAN | NOT NULL | - | - |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
 
 **Table CHECK Constraints:**
@@ -63,7 +63,7 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `category_id` | `SERIAL` | Yes | - | PK | - | - |
+| `category_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
 | `name` | `VARCHAR(100)` | No | - | UNIQUE, NOT NULL | - | - |
 | `description` | `TEXT` | Yes | - | - | - | - |
 | `parent_category_id` | `INTEGER` | Yes | - | - | - | - |
@@ -88,14 +88,14 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `discount_id` | `SERIAL` | Yes | - | PK | - | - |
+| `discount_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
 | `code` | `VARCHAR(50)` | No | - | UNIQUE, NOT NULL | - | - |
 | `discount_type` | `VARCHAR(20)` | No | - | NOT NULL | - | - |
 | `discount_value` | `DECIMAL(10, 2)` | No | - | NOT NULL | - | - |
 | `minimum_purchase` | `DECIMAL(10, 2)` | Yes | 0 | - | - | - |
 | `maximum_discount` | `DECIMAL(10, 2)` | Yes | - | - | - | - |
-| `start_date` | `DATE` | No | - | NOT NULL | - | - |
-| `end_date` | `DATE` | No | - | NOT NULL | - | - |
+| `start_date` | `DATE NOT NULL` | No | - | NOT NULL | - | - |
+| `end_date` | `DATE NOT NULL` | No | - | NOT NULL | - | - |
 | `usage_limit` | `INTEGER` | Yes | - | - | - | - |
 
 **Table CHECK Constraints:**
@@ -120,13 +120,13 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `inventory_id` | `SERIAL` | Yes | - | PK | - | - |
-| `product_id` | `INTEGER` | No | - | NOT NULL | - | - |
+| `inventory_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
+| `product_id` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
 | `warehouse_location` | `VARCHAR(100)` | No | - | NOT NULL | - | - |
-| `quantity_on_hand` | `INTEGER` | No | - | NOT NULL | - | - |
-| `quantity_reserved` | `INTEGER` | No | 0 | NOT NULL | - | - |
-| `reorder_level` | `INTEGER` | No | - | NOT NULL | - | - |
-| `max_stock_level` | `INTEGER` | No | - | NOT NULL | - | - |
+| `quantity_on_hand` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
+| `quantity_reserved` | `INTEGER NOT NULL DEFAULT 0` | No | 0 | NOT NULL | - | - |
+| `reorder_level` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
+| `max_stock_level` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
 | `last_count_date` | `DATE` | Yes | - | - | - | - |
 
 **Table CHECK Constraints:**
@@ -158,10 +158,10 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `order_item_id` | `SERIAL` | Yes | - | PK | - | - |
-| `order_id` | `INTEGER` | No | - | NOT NULL | - | - |
-| `product_id` | `INTEGER` | No | - | NOT NULL | - | - |
-| `quantity` | `INTEGER` | No | - | NOT NULL | - | - |
+| `order_item_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
+| `order_id` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
+| `product_id` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
+| `quantity` | `INTEGER NOT NULL CHECK` | No | - | NOT NULL | - | - |
 | `unit_price` | `DECIMAL(10, 2)` | No | - | NOT NULL | - | - |
 | `subtotal` | `DECIMAL(10, 2)` | No | - | NOT NULL | - | - |
 
@@ -190,12 +190,12 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `order_id` | `SERIAL` | Yes | - | PK | - | - |
-| `user_id` | `UUID` | No | - | NOT NULL | - | - |
+| `order_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
+| `user_id` | `UUID NOT NULL` | No | - | NOT NULL | - | - |
 | `order_number` | `VARCHAR(50)` | No | - | UNIQUE, NOT NULL | - | - |
 | `status` | `VARCHAR(20)` | No | pending | NOT NULL | - | - |
 | `total_amount` | `DECIMAL(10, 2)` | No | - | NOT NULL | - | - |
-| `shipping_address` | `TEXT` | No | - | NOT NULL | - | - |
+| `shipping_address` | `TEXT NOT NULL` | No | - | NOT NULL | - | - |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
 
@@ -227,13 +227,13 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `product_id` | `SERIAL` | Yes | - | PK | - | - |
+| `product_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
 | `name` | `VARCHAR(255)` | No | - | NOT NULL | - | - |
 | `description` | `TEXT` | Yes | - | - | - | - |
 | `sku` | `VARCHAR(100)` | No | - | UNIQUE, NOT NULL | - | - |
 | `price` | `DECIMAL(10, 2)` | No | - | NOT NULL | - | - |
-| `stock_quantity` | `INTEGER` | No | 0 | NOT NULL | - | - |
-| `category_id` | `INTEGER` | No | - | NOT NULL | - | - |
+| `stock_quantity` | `INTEGER NOT NULL DEFAULT 0 CHECK` | No | 0 | NOT NULL | - | - |
+| `category_id` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
 
@@ -265,10 +265,10 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `review_id` | `SERIAL` | Yes | - | PK | - | - |
-| `product_id` | `INTEGER` | No | - | NOT NULL | - | - |
-| `user_id` | `UUID` | No | - | NOT NULL | - | - |
-| `rating` | `INTEGER` | No | - | NOT NULL | - | - |
+| `review_id` | `SERIAL PRIMARY KEY` | Yes | - | PK | - | - |
+| `product_id` | `INTEGER NOT NULL` | No | - | NOT NULL | - | - |
+| `user_id` | `UUID NOT NULL` | No | - | NOT NULL | - | - |
+| `rating` | `INTEGER NOT NULL CHECK` | No | - | NOT NULL | - | - |
 | `title` | `VARCHAR(200)` | Yes | - | - | - | - |
 | `comment` | `TEXT` | Yes | - | - | - | - |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
@@ -302,7 +302,7 @@ This schema contains **9** table(s):
 
 | Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |
 |-------------|-----------|----------|---------|-------------|-----------|-------------|
-| `user_id` | `UUID` | Yes | uuid_generate_v4() | PK | - | - |
+| `user_id` | `UUID PRIMARY KEY DEFAULT uuid_generate_v4` | Yes | uuid_generate_v4() | PK | - | - |
 | `username` | `VARCHAR(50)` | No | - | UNIQUE, NOT NULL | - | - |
 | `email` | `VARCHAR(255)` | No | - | UNIQUE, NOT NULL | - | - |
 | `password_hash` | `VARCHAR(255)` | No | - | NOT NULL | - | - |
@@ -310,7 +310,7 @@ This schema contains **9** table(s):
 | `last_name` | `VARCHAR(100)` | Yes | - | - | - | - |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL | - | - |
-| `is_active` | `BOOLEAN` | No | TRUE | NOT NULL | - | - |
+| `is_active` | `BOOLEAN NOT NULL DEFAULT TRUE` | No | TRUE | NOT NULL | - | - |
 | `last_login` | `TIMESTAMP WITH TIME ZONE` | Yes | - | - | - | - |
 
 **Table CHECK Constraints:**

@@ -173,15 +173,17 @@ class SchemaParser:
             # Try patterns in order of complexity
             data_type = "unknown"
             type_patterns = [
-                (r"^(\w+\s+WITH\s+TIME\s+ZONE)", 20),  # TIMESTAMP WITH TIME ZONE (longest first)
-                (r"^(\w+\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))", 15),  # VARCHAR(50), DECIMAL(10,2)
-                (r"^(\w+)", 5),  # Simple types like INTEGER, UUID
+                (r"^((?:\w+\s+)+WITH\s+TIME\s+ZONE)", 25),  # TIMESTAMP WITH TIME ZONE (longest first)
+                (r"^((?:\w+\s+)*\w+\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))", 20),  # CHARACTER VARYING(5), VARCHAR(50), NUMERIC(8,6), DECIMAL(10,2)
+                (r"^((?:\w+\s+)*\w+)", 10),  # Simple types like INTEGER, UUID, CHARACTER VARYING (without size)
             ]
             
             for pattern, _ in sorted(type_patterns, key=lambda x: x[1], reverse=True):
                 type_match = re.match(pattern, rest, re.IGNORECASE)
                 if type_match:
                     data_type = type_match.group(1).strip()
+                    # Normalize spacing in data type (collapse multiple spaces to single space)
+                    data_type = re.sub(r'\s+', ' ', data_type)
                     break
 
             # Check for constraints in the full column definition

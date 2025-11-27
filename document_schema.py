@@ -20,6 +20,7 @@ class Column:
     default_value: Optional[str] = None
     is_primary_key: bool = False
     is_unique: bool = False
+    check_constraints: List[str] = field(default_factory=list)  # Column-level CHECK constraints
 
 
 @dataclass
@@ -34,6 +35,14 @@ class ForeignKey:
 
 
 @dataclass
+class CheckConstraint:
+    """Represents a CHECK constraint."""
+
+    name: Optional[str] = None
+    expression: str = ""
+
+
+@dataclass
 class Table:
     """Represents a database table with its columns and relationships."""
 
@@ -42,6 +51,7 @@ class Table:
     columns: List[Column] = field(default_factory=list)
     primary_key_columns: List[str] = field(default_factory=list)
     foreign_keys: List[ForeignKey] = field(default_factory=list)
+    check_constraints: List[CheckConstraint] = field(default_factory=list)  # Table-level CHECK constraints
     indexes: List[str] = field(default_factory=list)
     comment: Optional[str] = None
 
@@ -71,6 +81,9 @@ class SchemaParser:
 
         # Extract foreign keys from ALTER TABLE statements
         self._parse_alter_table_foreign_keys(normalized)
+
+        # Extract CHECK constraints from ALTER TABLE statements
+        self._parse_alter_table_check_constraints(normalized)
 
         # Extract indexes
         self._parse_indexes(normalized)
@@ -125,6 +138,7 @@ class SchemaParser:
                 table.columns = self._parse_columns(table_def)
                 table.primary_key_columns = self._extract_primary_key(table_def)
                 table.foreign_keys = self._parse_table_foreign_keys(table_def, table_name, schema)
+                table.check_constraints = self._parse_table_check_constraints(table_def)
 
                 # Store table with schema-qualified name
                 full_name = f"{schema}.{table_name}" if schema != "public" else table_name
@@ -194,6 +208,9 @@ class SchemaParser:
             else:
                 default_value = None
 
+            # Extract column-level CHECK constraints (inline)
+            check_constraints = self._extract_column_check_constraints(col_def)
+
             columns.append(
                 Column(
                     name=col_name,
@@ -201,10 +218,41 @@ class SchemaParser:
                     is_nullable=is_nullable,
                     default_value=default_value,
                     is_unique=is_unique,
+                    check_constraints=check_constraints,
                 )
             )
 
         return columns
+
+    def _extract_column_check_constraints(self, col_def: str) -> List[str]:
+        """Extract inline CHECK constraints from a column definition.
+        
+        Handles nested parentheses in CHECK expressions.
+        """
+        check_constraints = []
+        # Find all CHECK keywords
+        check_pattern = r"CHECK\s*\("
+        matches = list(re.finditer(check_pattern, col_def, re.IGNORECASE))
+        
+        for match in matches:
+            # Start after the opening parenthesis
+            start_pos = match.end()
+            paren_depth = 1
+            i = start_pos
+            
+            # Find the matching closing parenthesis
+            while i < len(col_def) and paren_depth > 0:
+                if col_def[i] == '(':
+                    paren_depth += 1
+                elif col_def[i] == ')':
+                    paren_depth -= 1
+                i += 1
+            
+            if paren_depth == 0:
+                expression = col_def[start_pos:i-1].strip()
+                check_constraints.append(expression)
+        
+        return check_constraints
 
     def _split_table_definition(self, table_def: str) -> List[str]:
         """Split table definition into individual column/constraint definitions."""
@@ -281,15 +329,72 @@ class SchemaParser:
 
         return foreign_keys
 
+    def _parse_table_check_constraints(self, table_def: str) -> List[CheckConstraint]:
+        """Parse table-level CHECK constraints from a table definition.
+        
+        Table-level CHECK constraints are separate CONSTRAINT clauses,
+        not inline with column definitions. These appear at the bottom of
+        CREATE TABLE blocks as standalone CONSTRAINT definitions.
+        """
+        check_constraints = []
+        # Split table definition to get individual parts
+        parts = self._split_table_definition(table_def)
+        
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+            
+            # Look for standalone CHECK constraints (not inline with columns)
+            # Pattern: CONSTRAINT name CHECK (expression) or just CHECK (expression)
+            # Check if this part starts with CONSTRAINT or CHECK
+            check_match = re.match(
+                r"^(?:CONSTRAINT\s+(\w+)\s+)?CHECK\s*\(",
+                part,
+                re.IGNORECASE
+            )
+            
+            if check_match:
+                constraint_name = check_match.group(1)
+                # Extract expression with balanced parentheses
+                # Find the opening parenthesis after CHECK
+                expression_start = part.find('(', check_match.end() - 1)
+                if expression_start != -1:
+                    paren_depth = 0
+                    i = expression_start
+                    while i < len(part):
+                        if part[i] == '(':
+                            paren_depth += 1
+                        elif part[i] == ')':
+                            paren_depth -= 1
+                            if paren_depth == 0:
+                                expression = part[expression_start+1:i].strip()
+                                check_constraints.append(
+                                    CheckConstraint(
+                                        name=constraint_name,
+                                        expression=expression
+                                    )
+                                )
+                                break
+                        i += 1
+        
+        return check_constraints
+
     def _parse_alter_table_foreign_keys(self, sql: str) -> None:
-        """Parse FOREIGN KEY constraints added via ALTER TABLE statements."""
+        """Parse FOREIGN KEY constraints added via ALTER TABLE statements.
+        
+        Handles both single-line and multi-line ALTER TABLE statements,
+        including when all ALTER TABLE statements are grouped at the end of the file.
+        """
         # Match ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY ...
         # Pattern handles both single-line and multi-line ALTER TABLE statements
+        # The DOTALL flag allows . to match newlines, and we handle whitespace more flexibly
         alter_pattern = (
             r"ALTER\s+TABLE\s+(?:(\w+)\.)?(\w+)\s+"
             r"ADD\s+CONSTRAINT\s+(\w+)\s+"
             r"FOREIGN\s+KEY\s*\(\s*([^)]+)\s*\)\s*"
             r"REFERENCES\s+(?:(\w+)\.)?(\w+)\s*\(\s*([^)]+)\s*\)"
+            r"(?:\s*ON\s+DELETE\s+\w+)?\s*;?"  # Optional ON DELETE clause and semicolon
         )
         matches = re.finditer(alter_pattern, sql, re.IGNORECASE | re.DOTALL)
 
@@ -308,7 +413,7 @@ class SchemaParser:
             full_table_name = f"{table_schema}.{table_name}" if table_schema != "public" else table_name
             ref_table_full = f"{ref_schema}.{ref_table}" if ref_schema != "public" else ref_table
 
-            # Only add if table exists
+            # Only add if table exists (tables should be parsed first)
             if full_table_name in self.tables:
                 fk = ForeignKey(
                     from_table=full_table_name,
@@ -319,21 +424,90 @@ class SchemaParser:
                 )
                 self.tables[full_table_name].foreign_keys.append(fk)
                 self.relationships.append(fk)
+            else:
+                # If table not found, it might be referenced before parsing - this is okay
+                # as long as tables are parsed before this method is called
+                pass
+
+    def _parse_alter_table_check_constraints(self, sql: str) -> None:
+        """Parse CHECK constraints added via ALTER TABLE statements.
+        
+        Handles both single-line and multi-line ALTER TABLE statements,
+        including when all ALTER TABLE statements are grouped at the end of the file.
+        Handles nested parentheses in CHECK expressions.
+        """
+        # Match ALTER TABLE ... ADD (CONSTRAINT ...)? CHECK ...
+        alter_pattern = (
+            r"ALTER\s+TABLE\s+(?:(\w+)\.)?(\w+)\s+"
+            r"ADD\s+(?:CONSTRAINT\s+(\w+)\s+)?CHECK\s*\("
+        )
+        matches = re.finditer(alter_pattern, sql, re.IGNORECASE | re.DOTALL)
+
+        for match in matches:
+            table_schema = match.group(1) or "public"
+            table_name = match.group(2)
+            constraint_name = match.group(3)
+            
+            # Find the matching closing parenthesis for the CHECK expression
+            start_pos = match.end()  # Position after opening parenthesis
+            paren_depth = 1
+            i = start_pos
+            
+            while i < len(sql) and paren_depth > 0:
+                if sql[i] == '(':
+                    paren_depth += 1
+                elif sql[i] == ')':
+                    paren_depth -= 1
+                i += 1
+            
+            if paren_depth == 0:
+                expression = sql[start_pos:i-1].strip()
+                
+                full_table_name = f"{table_schema}.{table_name}" if table_schema != "public" else table_name
+                
+                # Only add if table exists
+                if full_table_name in self.tables:
+                    check_constraint = CheckConstraint(
+                        name=constraint_name,
+                        expression=expression
+                    )
+                    self.tables[full_table_name].check_constraints.append(check_constraint)
 
     def _parse_indexes(self, sql: str) -> None:
-        """Parse CREATE INDEX statements."""
-        index_pattern = r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:\w+\.)?(\w+)\s+ON\s+(?:(\w+)\.)?(\w+)\s*\(([^)]+)\)"
-        matches = re.finditer(index_pattern, sql, re.IGNORECASE)
+        """Parse CREATE INDEX statements.
+        
+        Handles both single-line and multi-line CREATE INDEX statements,
+        including when all CREATE INDEX statements are grouped at the end of the file.
+        """
+        # First find CREATE INDEX statements, then extract column list with balanced parentheses
+        index_start_pattern = (
+            r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:\w+\.)?(\w+)\s+"
+            r"ON\s+(?:(\w+)\.)?(\w+)\s*\("
+        )
+        matches = re.finditer(index_start_pattern, sql, re.IGNORECASE | re.DOTALL)
 
         for match in matches:
             index_name = match.group(1)
             schema = match.group(2) or "public"
             table_name = match.group(3)
-            columns = match.group(4)
-
-            full_table_name = f"{schema}.{table_name}" if schema != "public" else table_name
-            if full_table_name in self.tables:
-                self.tables[full_table_name].indexes.append(f"{index_name} ({columns})")
+            start_pos = match.end()  # Position after opening parenthesis
+            
+            # Extract column list with balanced parentheses
+            paren_depth = 1
+            i = start_pos
+            while i < len(sql) and paren_depth > 0:
+                if sql[i] == '(':
+                    paren_depth += 1
+                elif sql[i] == ')':
+                    paren_depth -= 1
+                i += 1
+            
+            if paren_depth == 0:
+                columns = sql[start_pos:i-1].strip()  # Exclude the closing parenthesis
+                
+                full_table_name = f"{schema}.{table_name}" if schema != "public" else table_name
+                if full_table_name in self.tables:
+                    self.tables[full_table_name].indexes.append(f"{index_name} ({columns})")
 
     def _parse_table_comments(self, sql: str) -> None:
         """Parse COMMENT ON TABLE statements."""
@@ -394,6 +568,26 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
             )
 
         lines.append("")
+
+        # Display column-level CHECK constraints
+        has_column_checks = any(col.check_constraints for col in table.columns)
+        if has_column_checks:
+            lines.append("**Column CHECK Constraints:**\n")
+            for col in table.columns:
+                if col.check_constraints:
+                    for check_expr in col.check_constraints:
+                        lines.append(f"- `{col.name}`: `{check_expr}`")
+            lines.append("")
+
+        # Display table-level CHECK constraints
+        if table.check_constraints:
+            lines.append("**Table CHECK Constraints:**\n")
+            for check_constraint in table.check_constraints:
+                if check_constraint.name:
+                    lines.append(f"- `{check_constraint.name}`: `{check_constraint.expression}`")
+                else:
+                    lines.append(f"- `{check_constraint.expression}`")
+            lines.append("")
 
         # Foreign Keys
         if table.foreign_keys:

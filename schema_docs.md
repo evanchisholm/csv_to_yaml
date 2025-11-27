@@ -2,10 +2,12 @@
 
 ## Entity Overview
 
-This schema contains **7** table(s):
+This schema contains **9** table(s):
 
 - `addresses` (PK: address_id)
 - `categories` (PK: category_id)
+- `discounts` (PK: discount_id)
+- `inventory` (PK: inventory_id)
 - `order_items` (PK: order_item_id)
 - `orders` (PK: order_id)
 - `products` (PK: product_id)
@@ -32,6 +34,10 @@ This schema contains **7** table(s):
 | `country` | `VARCHAR(50)` | No | USA | NOT NULL |
 | `is_default` | `BOOLEAN` | No | BOOLEAN | NOT NULL |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
+
+**Table CHECK Constraints:**
+
+- `chk_address_valid`: `postal_code ~ '^[0-9]+$' OR LENGTH(postal_code) >= 5`
 
 **Foreign Keys:**
 
@@ -63,6 +69,58 @@ This schema contains **7** table(s):
 
 ---
 
+### discounts
+
+*Discount codes with complex table-level validation rules*
+
+**Columns:**
+
+| Column Name | Data Type | Nullable | Default | Constraints |
+|-------------|-----------|----------|---------|-------------|
+| `discount_id` | `SERIAL` | Yes | - | PK |
+| `code` | `VARCHAR(50)` | No | - | UNIQUE, NOT NULL |
+| `discount_type` | `VARCHAR(20)` | No | - | NOT NULL |
+| `discount_value` | `DECIMAL(10, 2)` | No | - | NOT NULL |
+| `minimum_purchase` | `DECIMAL(10, 2)` | Yes | 0 | - |
+| `maximum_discount` | `DECIMAL(10, 2)` | Yes | - | - |
+| `start_date` | `DATE` | No | - | NOT NULL |
+| `end_date` | `DATE` | No | - | NOT NULL |
+| `usage_limit` | `INTEGER` | Yes | - | - |
+
+**Table CHECK Constraints:**
+
+- `chk_discount_type`: `discount_type IN ('percentage', 'fixed_amount')`
+- `chk_discount_percentage`: `(discount_type = 'percentage' AND discount_value >= 0 AND discount_value <= 100) OR (discount_type = 'fixed_amount' AND discount_value > 0)`
+- `chk_discount_dates`: `end_date >= start_date`
+- `chk_discount_amounts`: `minimum_purchase >= 0 AND (maximum_discount IS NULL OR maximum_discount > 0)`
+
+---
+
+### inventory
+
+*Product inventory with table-level validation constraints*
+
+**Columns:**
+
+| Column Name | Data Type | Nullable | Default | Constraints |
+|-------------|-----------|----------|---------|-------------|
+| `inventory_id` | `SERIAL` | Yes | - | PK |
+| `product_id` | `INTEGER` | No | - | NOT NULL |
+| `warehouse_location` | `VARCHAR(100)` | No | - | NOT NULL |
+| `quantity_on_hand` | `INTEGER` | No | - | NOT NULL |
+| `quantity_reserved` | `INTEGER` | No | 0 | NOT NULL |
+| `reorder_level` | `INTEGER` | No | - | NOT NULL |
+| `max_stock_level` | `INTEGER` | No | - | NOT NULL |
+| `last_count_date` | `DATE` | Yes | - | - |
+
+**Table CHECK Constraints:**
+
+- `chk_inventory_quantities`: `quantity_on_hand >= 0 AND quantity_reserved >= 0`
+- `chk_inventory_reserved`: `quantity_reserved <= quantity_on_hand`
+- `chk_reorder_levels`: `reorder_level > 0 AND max_stock_level > reorder_level`
+
+---
+
 ### order_items
 
 *Individual line items within an order*
@@ -77,6 +135,11 @@ This schema contains **7** table(s):
 | `quantity` | `INTEGER` | No | - | NOT NULL |
 | `unit_price` | `DECIMAL(10, 2)` | No | - | NOT NULL |
 | `subtotal` | `DECIMAL(10, 2)` | No | - | NOT NULL |
+
+**Column CHECK Constraints:**
+
+- `quantity`: `quantity > 0`
+- `unit_price`: `unit_price >= 0`
 
 **Foreign Keys:**
 
@@ -106,6 +169,11 @@ This schema contains **7** table(s):
 | `shipping_address` | `TEXT` | No | - | NOT NULL |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
+
+**Column CHECK Constraints:**
+
+- `status`: `status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')`
+- `total_amount`: `total_amount >= 0`
 
 **Foreign Keys:**
 
@@ -137,6 +205,11 @@ This schema contains **7** table(s):
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
 
+**Column CHECK Constraints:**
+
+- `price`: `price >= 0`
+- `stock_quantity`: `stock_quantity >= 0`
+
 **Foreign Keys:**
 
 - `category_id` → `categories.category_id` (constraint: `fk_product_category`)
@@ -164,6 +237,10 @@ This schema contains **7** table(s):
 | `comment` | `TEXT` | Yes | - | - |
 | `created_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
 | `updated_at` | `TIMESTAMP WITH TIME ZONE` | No | CURRENT_TIMESTAMP | NOT NULL |
+
+**Column CHECK Constraints:**
+
+- `rating`: `rating >= 1 AND rating <= 5`
 
 **Foreign Keys:**
 
@@ -196,9 +273,13 @@ This schema contains **7** table(s):
 | `is_active` | `BOOLEAN` | No | TRUE | NOT NULL |
 | `last_login` | `TIMESTAMP WITH TIME ZONE` | Yes | - | - |
 
+**Table CHECK Constraints:**
+
+- `chk_email_format`: `email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'`
+
 **Indexes:**
 
-- `idx_users_email_lower (LOWER(email)`
+- `idx_users_email_lower (LOWER(email))`
 
 ---
 

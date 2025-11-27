@@ -721,6 +721,214 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
     return doc
 
 
+def escape_html(text: str) -> str:
+    """Escape HTML special characters."""
+    return (text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace('"', "&quot;")
+            .replace("'", "&#39;"))
+
+
+def generate_confluence_documentation(tables: Dict[str, Table], output_file: Optional[Path] = None) -> str:
+    """Generate Confluence-compatible HTML documentation for the schema.
+    
+    The output is HTML that can be directly pasted into Confluence:
+    1. Copy the entire HTML content
+    2. In Confluence, click Edit
+    3. Click the 'Insert' menu → 'Markup'
+    4. Select 'HTML' and paste the content
+    Alternatively, some Confluence versions allow pasting HTML directly.
+    """
+    lines = []
+    
+    # Wrap in a div for better Confluence compatibility
+    lines.append('<div class="confluence-content">')
+    lines.append('')
+    
+    # Title
+    lines.append('<h1>Database Schema Documentation</h1>')
+    lines.append('')
+    
+    # Entity Overview
+    lines.append('<h2>Entity Overview</h2>')
+    lines.append(f'<p>This schema contains <strong>{len(tables)}</strong> table(s):</p>')
+    lines.append('<ul>')
+    for table_name in sorted(tables.keys()):
+        table = tables[table_name]
+        pk_info = f' <em>(PK: {", ".join(table.primary_key_columns)})</em>' if table.primary_key_columns else ""
+        table_name_escaped = escape_html(table_name)
+        lines.append(f'<li><code>{table_name_escaped}</code>{pk_info}</li>')
+    lines.append('</ul>')
+    lines.append('')
+    
+    # Detailed Table Information
+    lines.append('<h2>Tables</h2>')
+    for table_name in sorted(tables.keys()):
+        table = tables[table_name]
+        table_name_escaped = escape_html(table_name)
+        lines.append(f'<h3>{table_name_escaped}</h3>')
+        lines.append('')
+        
+        if table.comment:
+            comment_escaped = escape_html(table.comment)
+            lines.append(f'<p><em>{comment_escaped}</em></p>')
+            lines.append('')
+        
+        # Columns table
+        lines.append('<p><strong>Columns:</strong></p>')
+        lines.append('<table class="confluenceTable">')
+        lines.append('<tbody>')
+        lines.append('<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>')
+        
+        for col in table.columns:
+            constraints = []
+            if col.name in table.primary_key_columns:
+                constraints.append("PK")
+            if col.is_unique:
+                constraints.append("UNIQUE")
+            if not col.is_nullable and col.name not in table.primary_key_columns:
+                constraints.append("NOT NULL")
+            
+            constraints_str = ", ".join(constraints) if constraints else "-"
+            nullable = "No" if not col.is_nullable else "Yes"
+            default = escape_html(str(col.default_value)) if col.default_value else "-"
+            
+            col_name_escaped = escape_html(col.name)
+            data_type_escaped = escape_html(col.data_type)
+            constraints_escaped = escape_html(constraints_str)
+            
+            lines.append(
+                f'<tr>'
+                f'<td class="confluenceTd"><code>{col_name_escaped}</code></td>'
+                f'<td class="confluenceTd"><code>{data_type_escaped}</code></td>'
+                f'<td class="confluenceTd">{nullable}</td>'
+                f'<td class="confluenceTd">{default}</td>'
+                f'<td class="confluenceTd">{constraints_escaped}</td>'
+                f'</tr>'
+            )
+        
+        lines.append('</tbody>')
+        lines.append('</table>')
+        lines.append('')
+        
+        # Column-level CHECK constraints
+        has_column_checks = any(col.check_constraints for col in table.columns)
+        if has_column_checks:
+            lines.append('<p><strong>Column CHECK Constraints:</strong></p>')
+            lines.append('<ul>')
+            for col in table.columns:
+                if col.check_constraints:
+                    for check_expr in col.check_constraints:
+                        col_name_escaped = escape_html(col.name)
+                        check_expr_escaped = escape_html(check_expr)
+                        lines.append(f'<li><code>{col_name_escaped}</code>: <code>{check_expr_escaped}</code></li>')
+            lines.append('</ul>')
+            lines.append('')
+        
+        # Table-level CHECK constraints
+        if table.check_constraints:
+            lines.append('<p><strong>Table CHECK Constraints:</strong></p>')
+            lines.append('<ul>')
+            for check_constraint in table.check_constraints:
+                if check_constraint.name:
+                    name_escaped = escape_html(check_constraint.name)
+                    expr_escaped = escape_html(check_constraint.expression)
+                    lines.append(f'<li><code>{name_escaped}</code>: <code>{expr_escaped}</code></li>')
+                else:
+                    expr_escaped = escape_html(check_constraint.expression)
+                    lines.append(f'<li><code>{expr_escaped}</code></li>')
+            lines.append('</ul>')
+            lines.append('')
+        
+        # Foreign Keys
+        if table.foreign_keys:
+            lines.append('<p><strong>Foreign Keys:</strong></p>')
+            lines.append('<ul>')
+            for fk in table.foreign_keys:
+                from_cols = ", ".join(fk.from_columns)
+                to_cols = ", ".join(fk.to_columns)
+                from_cols_escaped = escape_html(from_cols)
+                to_table_escaped = escape_html(fk.to_table)
+                to_cols_escaped = escape_html(to_cols)
+                constraint_name_escaped = escape_html(fk.constraint_name)
+                lines.append(
+                    f'<li><code>{from_cols_escaped}</code> → '
+                    f'<code>{to_table_escaped}.{to_cols_escaped}</code> '
+                    f'(constraint: <code>{constraint_name_escaped}</code>)</li>'
+                )
+            lines.append('</ul>')
+            lines.append('')
+        
+        # Indexes
+        if table.indexes:
+            lines.append('<p><strong>Indexes:</strong></p>')
+            lines.append('<ul>')
+            for idx in table.indexes:
+                idx_escaped = escape_html(idx)
+                lines.append(f'<li><code>{idx_escaped}</code></li>')
+            lines.append('</ul>')
+            lines.append('')
+        
+        lines.append('<hr>')
+        lines.append('')
+    
+    # Relationships Summary
+    lines.append('<h2>Relationships</h2>')
+    if not any(table.foreign_keys for table in tables.values()):
+        lines.append('<p>No foreign key relationships defined.</p>')
+    else:
+        lines.append('<h3>Foreign Key Relationships</h3>')
+        lines.append('<table class="confluenceTable">')
+        lines.append('<tbody>')
+        lines.append('<tr><th class="confluenceTh">From Table</th><th class="confluenceTh">From Columns</th><th class="confluenceTh">To Table</th><th class="confluenceTh">To Columns</th></tr>')
+        
+        for table_name in sorted(tables.keys()):
+            table = tables[table_name]
+            for fk in sorted(table.foreign_keys, key=lambda x: x.from_columns[0]):
+                from_cols = ", ".join(fk.from_columns)
+                to_cols = ", ".join(fk.to_columns)
+                from_table_escaped = escape_html(fk.from_table)
+                from_cols_escaped = escape_html(from_cols)
+                to_table_escaped = escape_html(fk.to_table)
+                to_cols_escaped = escape_html(to_cols)
+                
+                lines.append(
+                    f'<tr>'
+                    f'<td class="confluenceTd"><code>{from_table_escaped}</code></td>'
+                    f'<td class="confluenceTd"><code>{from_cols_escaped}</code></td>'
+                    f'<td class="confluenceTd"><code>{to_table_escaped}</code></td>'
+                    f'<td class="confluenceTd"><code>{to_cols_escaped}</code></td>'
+                    f'</tr>'
+                )
+        
+        lines.append('</tbody>')
+        lines.append('</table>')
+        lines.append('')
+        
+        # Relationship Diagram
+        lines.append('<h3>Relationship Diagram</h3>')
+        lines.append('<pre>')
+        for table_name in sorted(tables.keys()):
+            table = tables[table_name]
+            if table.foreign_keys:
+                for fk in table.foreign_keys:
+                    from_cols = ", ".join(fk.from_columns)
+                    to_cols = ", ".join(fk.to_columns)
+                    lines.append(f'{fk.from_table} ({from_cols}) --> {fk.to_table} ({to_cols})')
+        lines.append('</pre>')
+    
+    # Close the wrapper div
+    lines.append('</div>')
+    
+    doc = "\n".join(lines)
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(doc, encoding="utf-8")
+    return doc
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -739,9 +947,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--format",
-        choices=["markdown", "text"],
+        choices=["markdown", "text", "confluence"],
         default="markdown",
-        help="Output format for documentation (default: markdown).",
+        help="Output format for documentation (default: markdown). Use 'confluence' for Confluence-compatible HTML.",
     )
     return parser.parse_args()
 
@@ -756,6 +964,10 @@ def main() -> None:
 
         if args.format == "markdown":
             doc = generate_documentation(tables, args.output)
+            if not args.output:
+                print(doc)
+        elif args.format == "confluence":
+            doc = generate_confluence_documentation(tables, args.output)
             if not args.output:
                 print(doc)
         else:

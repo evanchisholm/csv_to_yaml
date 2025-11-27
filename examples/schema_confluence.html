@@ -1,0 +1,335 @@
+<div class="confluence-content">
+
+<h1>Database Schema Documentation</h1>
+
+<h2>Entity Overview</h2>
+<p>This schema contains <strong>9</strong> table(s):</p>
+<ul>
+<li><code>addresses</code> <em>(PK: address_id)</em></li>
+<li><code>categories</code> <em>(PK: category_id)</em></li>
+<li><code>discounts</code> <em>(PK: discount_id)</em></li>
+<li><code>inventory</code> <em>(PK: inventory_id)</em></li>
+<li><code>order_items</code> <em>(PK: order_item_id)</em></li>
+<li><code>orders</code> <em>(PK: order_id)</em></li>
+<li><code>products</code> <em>(PK: product_id)</em></li>
+<li><code>reviews</code> <em>(PK: review_id)</em></li>
+<li><code>users</code> <em>(PK: user_id)</em></li>
+</ul>
+
+<h2>Tables</h2>
+<h3>addresses</h3>
+
+<p><em>User shipping and billing addresses</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>address_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>UUID</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>label</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>street_address</code></td><td class="confluenceTd"><code>VARCHAR(255)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>city</code></td><td class="confluenceTd"><code>VARCHAR(100)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>state</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>postal_code</code></td><td class="confluenceTd"><code>VARCHAR(20)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>country</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">USA</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>is_default</code></td><td class="confluenceTd"><code>BOOLEAN</code></td><td class="confluenceTd">No</td><td class="confluenceTd">BOOLEAN</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</table>
+
+<p><strong>Table CHECK Constraints:</strong></p>
+<ul>
+<li><code>chk_address_valid</code>: <code>postal_code ~ &#39;^[0-9]+$&#39; OR LENGTH(postal_code) &gt;= 5</code></li>
+</ul>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>user_id</code> → <code>users.user_id</code> (constraint: <code>fk_address_user</code>)</li>
+</ul>
+
+<hr>
+
+<h3>categories</h3>
+
+<p><em>Hierarchical product categories with self-referencing parent relationship</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>category_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>name</code></td><td class="confluenceTd"><code>VARCHAR(100)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">UNIQUE, NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>description</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>parent_category_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</table>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>parent_category_id</code> → <code>categories.category_id</code> (constraint: <code>fk_parent_category</code>)</li>
+</ul>
+
+<hr>
+
+<h3>discounts</h3>
+
+<p><em>Discount codes with complex table-level validation rules</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>discount_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>code</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">UNIQUE, NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>discount_type</code></td><td class="confluenceTd"><code>VARCHAR(20)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>discount_value</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>minimum_purchase</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">0</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>maximum_discount</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>start_date</code></td><td class="confluenceTd"><code>DATE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>end_date</code></td><td class="confluenceTd"><code>DATE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>usage_limit</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+</table>
+
+<p><strong>Table CHECK Constraints:</strong></p>
+<ul>
+<li><code>chk_discount_type</code>: <code>discount_type IN (&#39;percentage&#39;, &#39;fixed_amount&#39;)</code></li>
+<li><code>chk_discount_percentage</code>: <code>(discount_type = &#39;percentage&#39; AND discount_value &gt;= 0 AND discount_value &lt;= 100) OR (discount_type = &#39;fixed_amount&#39; AND discount_value &gt; 0)</code></li>
+<li><code>chk_discount_dates</code>: <code>end_date &gt;= start_date</code></li>
+<li><code>chk_discount_amounts</code>: <code>minimum_purchase &gt;= 0 AND (maximum_discount IS NULL OR maximum_discount &gt; 0)</code></li>
+</ul>
+
+<hr>
+
+<h3>inventory</h3>
+
+<p><em>Product inventory with table-level validation constraints</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>inventory_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>warehouse_location</code></td><td class="confluenceTd"><code>VARCHAR(100)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>quantity_on_hand</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>quantity_reserved</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">0</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>reorder_level</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>max_stock_level</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>last_count_date</code></td><td class="confluenceTd"><code>DATE</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+</table>
+
+<p><strong>Table CHECK Constraints:</strong></p>
+<ul>
+<li><code>chk_inventory_quantities</code>: <code>quantity_on_hand &gt;= 0 AND quantity_reserved &gt;= 0</code></li>
+<li><code>chk_inventory_reserved</code>: <code>quantity_reserved &lt;= quantity_on_hand</code></li>
+<li><code>chk_reorder_levels</code>: <code>reorder_level &gt; 0 AND max_stock_level &gt; reorder_level</code></li>
+</ul>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>product_id</code> → <code>products.product_id</code> (constraint: <code>fk_inventory_product</code>)</li>
+</ul>
+
+<p><strong>Indexes:</strong></p>
+<ul>
+<li><code>idx_inventory_location_btree (warehouse_location) USING btree</code></li>
+</ul>
+
+<hr>
+
+<h3>order_items</h3>
+
+<p><em>Individual line items within an order</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>order_item_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>order_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>quantity</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>unit_price</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>subtotal</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+</table>
+
+<p><strong>Column CHECK Constraints:</strong></p>
+<ul>
+<li><code>quantity</code>: <code>quantity &gt; 0</code></li>
+<li><code>unit_price</code>: <code>unit_price &gt;= 0</code></li>
+</ul>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>order_id</code> → <code>orders.order_id</code> (constraint: <code>fk_order_item_order</code>)</li>
+<li><code>product_id</code> → <code>products.product_id</code> (constraint: <code>fk_order_item_product</code>)</li>
+</ul>
+
+<hr>
+
+<h3>orders</h3>
+
+<p><em>Customer orders with status tracking</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>order_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>UUID</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>order_number</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">UNIQUE, NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>status</code></td><td class="confluenceTd"><code>VARCHAR(20)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">pending</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>total_amount</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>shipping_address</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</table>
+
+<p><strong>Column CHECK Constraints:</strong></p>
+<ul>
+<li><code>status</code>: <code>status IN (&#39;pending&#39;, &#39;processing&#39;, &#39;shipped&#39;, &#39;delivered&#39;, &#39;cancelled&#39;)</code></li>
+<li><code>total_amount</code>: <code>total_amount &gt;= 0</code></li>
+</ul>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>user_id</code> → <code>users.user_id</code> (constraint: <code>fk_order_user</code>)</li>
+</ul>
+
+<p><strong>Indexes:</strong></p>
+<ul>
+<li><code>idx_orders_shipping_address_gist (shipping_address) USING gist</code></li>
+</ul>
+
+<hr>
+
+<h3>products</h3>
+
+<p><em>Product catalog with inventory tracking</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>name</code></td><td class="confluenceTd"><code>VARCHAR(255)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>description</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>sku</code></td><td class="confluenceTd"><code>VARCHAR(100)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">UNIQUE, NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>price</code></td><td class="confluenceTd"><code>DECIMAL(10, 2)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>stock_quantity</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">0</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>category_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</table>
+
+<p><strong>Column CHECK Constraints:</strong></p>
+<ul>
+<li><code>price</code>: <code>price &gt;= 0</code></li>
+<li><code>stock_quantity</code>: <code>stock_quantity &gt;= 0</code></li>
+</ul>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>category_id</code> → <code>categories.category_id</code> (constraint: <code>fk_product_category</code>)</li>
+</ul>
+
+<p><strong>Indexes:</strong></p>
+<ul>
+<li><code>idx_products_description_fulltext (to_tsvector(&#39;english&#39;, description)) USING gin</code></li>
+</ul>
+
+<hr>
+
+<h3>reviews</h3>
+
+<p><em>Product reviews and ratings from users</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>review_id</code></td><td class="confluenceTd"><code>SERIAL</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>UUID</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>rating</code></td><td class="confluenceTd"><code>INTEGER</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>title</code></td><td class="confluenceTd"><code>VARCHAR(200)</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>comment</code></td><td class="confluenceTd"><code>TEXT</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+</table>
+
+<p><strong>Column CHECK Constraints:</strong></p>
+<ul>
+<li><code>rating</code>: <code>rating &gt;= 1 AND rating &lt;= 5</code></li>
+</ul>
+
+<p><strong>Foreign Keys:</strong></p>
+<ul>
+<li><code>product_id</code> → <code>products.product_id</code> (constraint: <code>fk_review_product</code>)</li>
+<li><code>user_id</code> → <code>users.user_id</code> (constraint: <code>fk_review_user</code>)</li>
+</ul>
+
+<p><strong>Indexes:</strong></p>
+<ul>
+<li><code>idx_reviews_comment_fulltext (to_tsvector(&#39;english&#39;, comment)) USING gin</code></li>
+</ul>
+
+<hr>
+
+<h3>users</h3>
+
+<p><em>User accounts table storing authentication and profile information</em></p>
+
+<p><strong>Columns:</strong></p>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>
+<tr><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>UUID</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">uuid_generate_v4()</td><td class="confluenceTd">PK</td></tr>
+<tr><td class="confluenceTd"><code>username</code></td><td class="confluenceTd"><code>VARCHAR(50)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">UNIQUE, NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>email</code></td><td class="confluenceTd"><code>VARCHAR(255)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">UNIQUE, NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>password_hash</code></td><td class="confluenceTd"><code>VARCHAR(255)</code></td><td class="confluenceTd">No</td><td class="confluenceTd">-</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>first_name</code></td><td class="confluenceTd"><code>VARCHAR(100)</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>last_name</code></td><td class="confluenceTd"><code>VARCHAR(100)</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+<tr><td class="confluenceTd"><code>created_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>updated_at</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">No</td><td class="confluenceTd">CURRENT_TIMESTAMP</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>is_active</code></td><td class="confluenceTd"><code>BOOLEAN</code></td><td class="confluenceTd">No</td><td class="confluenceTd">TRUE</td><td class="confluenceTd">NOT NULL</td></tr>
+<tr><td class="confluenceTd"><code>last_login</code></td><td class="confluenceTd"><code>TIMESTAMP WITH TIME ZONE</code></td><td class="confluenceTd">Yes</td><td class="confluenceTd">-</td><td class="confluenceTd">-</td></tr>
+</table>
+
+<p><strong>Table CHECK Constraints:</strong></p>
+<ul>
+<li><code>chk_email_format</code>: <code>email ~* &#39;^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$&#39;</code></li>
+</ul>
+
+<hr>
+
+<h2>Relationships</h2>
+<h3>Foreign Key Relationships</h3>
+<table class="confluenceTable">
+<tbody>
+<tr><th class="confluenceTh">From Table</th><th class="confluenceTh">From Columns</th><th class="confluenceTh">To Table</th><th class="confluenceTh">To Columns</th></tr>
+<tr><td class="confluenceTd"><code>addresses</code></td><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>users</code></td><td class="confluenceTd"><code>user_id</code></td></tr>
+<tr><td class="confluenceTd"><code>categories</code></td><td class="confluenceTd"><code>parent_category_id</code></td><td class="confluenceTd"><code>categories</code></td><td class="confluenceTd"><code>category_id</code></td></tr>
+<tr><td class="confluenceTd"><code>inventory</code></td><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>products</code></td><td class="confluenceTd"><code>product_id</code></td></tr>
+<tr><td class="confluenceTd"><code>order_items</code></td><td class="confluenceTd"><code>order_id</code></td><td class="confluenceTd"><code>orders</code></td><td class="confluenceTd"><code>order_id</code></td></tr>
+<tr><td class="confluenceTd"><code>order_items</code></td><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>products</code></td><td class="confluenceTd"><code>product_id</code></td></tr>
+<tr><td class="confluenceTd"><code>orders</code></td><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>users</code></td><td class="confluenceTd"><code>user_id</code></td></tr>
+<tr><td class="confluenceTd"><code>products</code></td><td class="confluenceTd"><code>category_id</code></td><td class="confluenceTd"><code>categories</code></td><td class="confluenceTd"><code>category_id</code></td></tr>
+<tr><td class="confluenceTd"><code>reviews</code></td><td class="confluenceTd"><code>product_id</code></td><td class="confluenceTd"><code>products</code></td><td class="confluenceTd"><code>product_id</code></td></tr>
+<tr><td class="confluenceTd"><code>reviews</code></td><td class="confluenceTd"><code>user_id</code></td><td class="confluenceTd"><code>users</code></td><td class="confluenceTd"><code>user_id</code></td></tr>
+</tbody>
+</table>
+
+<h3>Relationship Diagram</h3>
+<pre>
+addresses (user_id) --> users (user_id)
+categories (parent_category_id) --> categories (category_id)
+inventory (product_id) --> products (product_id)
+order_items (order_id) --> orders (order_id)
+order_items (product_id) --> products (product_id)
+orders (user_id) --> users (user_id)
+products (category_id) --> categories (category_id)
+reviews (product_id) --> products (product_id)
+reviews (user_id) --> users (user_id)
+</pre>
+</div>

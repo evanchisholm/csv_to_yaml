@@ -337,15 +337,27 @@ This schema contains **9** table(s):
 
 ### Relationship Diagram
 
+
+Parent-to-Child Relationships:
+
 ```
 
-addresses (user_id) --> users (user_id)
-categories (parent_category_id) --> categories (category_id)
-inventory (product_id) --> products (product_id)
-order_items (order_id) --> orders (order_id)
-order_items (product_id) --> products (product_id)
-orders (user_id) --> users (user_id)
-products (category_id) --> categories (category_id)
-reviews (product_id) --> products (product_id)
-reviews (user_id) --> users (user_id)
+categories
+    ├── categories (parent_category_id → category_id)
+│   ... (see above)
+    └── products (category_id → category_id)
+    products
+    ├── inventory (product_id → product_id)
+    ├── order_items (product_id → product_id)
+    └── reviews (product_id → product_id)
+
+users
+    ├── addresses (user_id → user_id)
+    ├── orders (user_id → user_id)
+│   orders
+│   │   └── order_items (order_id → order_id)
+    └── reviews (user_id → user_id)
+
+Standalone tables (no relationships):
+discounts
 ```

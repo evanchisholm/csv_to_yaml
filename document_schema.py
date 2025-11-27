@@ -610,6 +610,189 @@ def _make_anchor_id(text: str) -> str:
     return anchor
 
 
+def _build_relationship_tree(tables: Dict[str, Table]) -> Dict[str, List[tuple]]:
+    """Build a tree structure of parent-to-child relationships.
+    
+    Returns:
+        Dictionary mapping parent table names to list of (child_table, fk_info) tuples
+    """
+    tree: Dict[str, List[tuple]] = {}
+    
+    for table_name, table in tables.items():
+        for fk in table.foreign_keys:
+            parent_table = fk.to_table
+            child_table = fk.from_table
+            fk_info = {
+                'from_cols': fk.from_columns,
+                'to_cols': fk.to_columns,
+                'constraint': fk.constraint_name
+            }
+            
+            if parent_table not in tree:
+                tree[parent_table] = []
+            tree[parent_table].append((child_table, fk_info))
+    
+    return tree
+
+
+def _generate_ascii_relationship_diagram(tables: Dict[str, Table]) -> List[str]:
+    """Generate ASCII art diagram showing parent-to-child relationships."""
+    lines = []
+    
+    # Build relationship tree
+    tree = _build_relationship_tree(tables)
+    
+    if not tree:
+        lines.append("No relationships defined.")
+        return lines
+    
+    # Find all child tables (tables that reference other tables)
+    all_child_tables = set()
+    for children in tree.values():
+        for child_table, _ in children:
+            all_child_tables.add(child_table)
+    
+    # Root tables are those that are parents but not children (in other relationships)
+    # This excludes self-references from being considered "children"
+    root_tables = []
+    for parent_table in sorted(tree.keys()):
+        # Check if this table is a child in any NON-self relationship
+        is_child = False
+        for other_parent, children_list in tree.items():
+            if other_parent != parent_table:  # Exclude self-references
+                for child_table, _ in children_list:
+                    if child_table == parent_table:
+                        is_child = True
+                        break
+                if is_child:
+                    break
+        
+        if not is_child:
+            root_tables.append(parent_table)
+    
+    # If no clear roots found, use all parent tables as roots
+    if not root_tables:
+        root_tables = sorted(tree.keys())
+    
+    def draw_table_name(table_name: str, prefix: str = "") -> str:
+        """Draw table name."""
+        return prefix + table_name
+    
+    def draw_vertical_line(prefix: str) -> str:
+        """Draw vertical connector line."""
+        return prefix + "│"
+    
+    def draw_branch_connector(is_last: bool, prefix: str = "") -> str:
+        """Draw branch connector (├── or └──)."""
+        if is_last:
+            return prefix + "└── "
+        else:
+            return prefix + "├── "
+    
+    def draw_relationships(parent: str, visited: set, prefix: str = "", is_last: bool = True, depth: int = 0, show_table_name: bool = True):
+        """Recursively draw relationships from a parent table.
+        
+        Args:
+            parent: Table name to draw
+            visited: Set of already visited tables (to avoid cycles)
+            prefix: String prefix for indentation
+            is_last: Whether this is the last child in its parent's list
+            depth: Current depth in the tree
+            show_table_name: Whether to show the table name (False when already shown in branch)
+        """
+        if parent not in tables:
+            return
+        
+        if parent in visited and depth > 0:
+            # Show reference but don't recurse to avoid infinite loops (self-references)
+            # Don't show table name again, just the reference
+            return
+        
+        visited.add(parent)
+        
+        # Draw the parent table name if needed
+        if show_table_name:
+            table_line = draw_table_name(parent, prefix)
+            lines.append(table_line)
+        
+        # Get children
+        if parent in tree:
+            children = tree[parent]
+            # Sort children for consistent output
+            children = sorted(children, key=lambda x: x[0])
+            
+            for idx, (child_table, fk_info) in enumerate(children):
+                is_last_child = (idx == len(children) - 1)
+                
+                # Determine prefix for connectors
+                if is_last and not show_table_name:
+                    # If parent wasn't shown, adjust prefix
+                    connector_prefix = prefix
+                    child_prefix = prefix
+                elif is_last:
+                    connector_prefix = prefix + "    "
+                    child_prefix = prefix + "    "
+                else:
+                    connector_prefix = prefix + "│   "
+                    child_prefix = prefix + "│   "
+                
+                # Check if child has children
+                child_has_children = child_table in tree and tree[child_table]
+                
+                # Determine prefix for child's children
+                if is_last_child:
+                    new_prefix = prefix + "    "
+                else:
+                    new_prefix = prefix + "│   "
+                
+                # Check if this is a self-reference
+                is_self_ref = (child_table == parent)
+                
+                # Show branch with table name and FK relationship
+                branch = draw_branch_connector(is_last_child, connector_prefix)
+                from_cols = ", ".join(fk_info['from_cols'])
+                to_cols = ", ".join(fk_info['to_cols'])
+                branch += f"{child_table} ({from_cols} → {to_cols})"
+                lines.append(branch)
+                
+                # Handle self-references
+                if is_self_ref:
+                    # For self-references, show "... (see above)" and don't recurse
+                    lines.append(new_prefix + "... (see above)")
+                elif child_has_children:
+                    # If child has children, show it as a parent table and then its children
+                    child_table_line = draw_table_name(child_table, new_prefix)
+                    lines.append(child_table_line)
+                    # Recursively draw child relationships
+                    draw_relationships(child_table, visited.copy(), new_prefix, is_last_child, depth + 1, show_table_name=False)
+    
+    # Draw from root tables
+    for idx, root in enumerate(root_tables):
+        if root in tables:
+            draw_relationships(root, set(), "", True, 0)
+            if idx < len(root_tables) - 1:
+                lines.append("")  # Space between root trees
+    
+    # Remove the collect_shown code - it's not needed and causes recursion issues
+    # The draw_relationships function already handles showing all tables
+    
+    # Show orphan tables (tables with no relationships)
+    all_connected = set()
+    for parent in tree.keys():
+        all_connected.add(parent)
+        for child, _ in tree[parent]:
+            all_connected.add(child)
+    
+    orphan_tables = [t for t in sorted(tables.keys()) if t not in all_connected]
+    if orphan_tables:
+        lines.append("")
+        lines.append("Standalone tables (no relationships):")
+        for table in orphan_tables:
+            lines.append(table)
+    
+    return lines
+
+
 def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path] = None) -> str:
     """Generate markdown documentation for the schema."""
     lines = []
@@ -724,16 +907,12 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
 
         lines.append("")
 
-        # Relationship Graph (textual)
+        # Relationship Diagram (ASCII art)
         lines.append("### Relationship Diagram\n")
+        lines.append("\nParent-to-Child Relationships:\n")
         lines.append("```\n")
-        for table_name in sorted(tables.keys()):
-            table = tables[table_name]
-            if table.foreign_keys:
-                for fk in table.foreign_keys:
-                    from_cols = ", ".join(fk.from_columns)
-                    to_cols = ", ".join(fk.to_columns)
-                    lines.append(f"{fk.from_table} ({from_cols}) --> {fk.to_table} ({to_cols})")
+        diagram_lines = _generate_ascii_relationship_diagram(tables)
+        lines.extend(diagram_lines)
         lines.append("```\n")
 
     doc = "\n".join(lines)
@@ -937,16 +1116,14 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
         lines.append('</table>')
         lines.append('')
         
-        # Relationship Diagram
+        # Relationship Diagram (ASCII art)
         lines.append('<h3>Relationship Diagram</h3>')
+        lines.append('<p>Parent-to-Child Relationships:</p>')
         lines.append('<pre>')
-        for table_name in sorted(tables.keys()):
-            table = tables[table_name]
-            if table.foreign_keys:
-                for fk in table.foreign_keys:
-                    from_cols = ", ".join(fk.from_columns)
-                    to_cols = ", ".join(fk.to_columns)
-                    lines.append(f'{fk.from_table} ({from_cols}) --> {fk.to_table} ({to_cols})')
+        diagram_lines = _generate_ascii_relationship_diagram(tables)
+        for line in diagram_lines:
+            line_escaped = escape_html(line)
+            lines.append(line_escaped)
         lines.append('</pre>')
     
     # Close the wrapper div

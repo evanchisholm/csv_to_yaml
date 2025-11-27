@@ -43,10 +43,6 @@ This schema contains **9** table(s):
 
 - `user_id` → `users.user_id` (constraint: `fk_address_user`)
 
-**Indexes:**
-
-- `idx_addresses_user (user_id)`
-
 ---
 
 ### categories
@@ -119,6 +115,14 @@ This schema contains **9** table(s):
 - `chk_inventory_reserved`: `quantity_reserved <= quantity_on_hand`
 - `chk_reorder_levels`: `reorder_level > 0 AND max_stock_level > reorder_level`
 
+**Foreign Keys:**
+
+- `product_id` → `products.product_id` (constraint: `fk_inventory_product`)
+
+**Indexes:**
+
+- `idx_inventory_location_btree (warehouse_location) USING btree`
+
 ---
 
 ### order_items
@@ -145,11 +149,6 @@ This schema contains **9** table(s):
 
 - `order_id` → `orders.order_id` (constraint: `fk_order_item_order`)
 - `product_id` → `products.product_id` (constraint: `fk_order_item_product`)
-
-**Indexes:**
-
-- `idx_order_items_order (order_id)`
-- `idx_order_items_product (product_id)`
 
 ---
 
@@ -181,9 +180,7 @@ This schema contains **9** table(s):
 
 **Indexes:**
 
-- `idx_orders_user (user_id)`
-- `idx_orders_status (status)`
-- `idx_orders_created (created_at DESC)`
+- `idx_orders_shipping_address_gist (shipping_address) USING gist`
 
 ---
 
@@ -216,8 +213,7 @@ This schema contains **9** table(s):
 
 **Indexes:**
 
-- `idx_products_category (category_id)`
-- `idx_products_category_price (category_id, price)`
+- `idx_products_description_fulltext (to_tsvector('english', description)) USING gin`
 
 ---
 
@@ -249,8 +245,7 @@ This schema contains **9** table(s):
 
 **Indexes:**
 
-- `idx_reviews_product (product_id)`
-- `idx_reviews_user (user_id)`
+- `idx_reviews_comment_fulltext (to_tsvector('english', comment)) USING gin`
 
 ---
 
@@ -277,10 +272,6 @@ This schema contains **9** table(s):
 
 - `chk_email_format`: `email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'`
 
-**Indexes:**
-
-- `idx_users_email_lower (LOWER(email))`
-
 ---
 
 ## Relationships
@@ -291,6 +282,7 @@ This schema contains **9** table(s):
 |------------|--------------|----------|------------|
 | `addresses` | `user_id` | `users` | `user_id` |
 | `categories` | `parent_category_id` | `categories` | `category_id` |
+| `inventory` | `product_id` | `products` | `product_id` |
 | `order_items` | `order_id` | `orders` | `order_id` |
 | `order_items` | `product_id` | `products` | `product_id` |
 | `orders` | `user_id` | `users` | `user_id` |
@@ -304,6 +296,7 @@ This schema contains **9** table(s):
 
 addresses (user_id) --> users (user_id)
 categories (parent_category_id) --> categories (category_id)
+inventory (product_id) --> products (product_id)
 order_items (order_id) --> orders (order_id)
 order_items (product_id) --> products (product_id)
 orders (user_id) --> users (user_id)

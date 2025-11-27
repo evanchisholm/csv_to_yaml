@@ -202,6 +202,11 @@ ALTER TABLE public.addresses
     ADD CONSTRAINT fk_address_user
     FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 
+-- Foreign key constraints using ALTER TABLE ONLY pattern (separate line format)
+ALTER TABLE ONLY public.inventory
+    ADD CONSTRAINT fk_inventory_product
+    FOREIGN KEY (product_id) REFERENCES public.products(product_id) ON DELETE RESTRICT;
+
 -- Additional constraint examples
 ALTER TABLE public.users 
     ADD CONSTRAINT chk_email_format 
@@ -233,3 +238,13 @@ CREATE INDEX idx_addresses_user ON public.addresses(user_id);
 
 -- Indexes for users table
 CREATE UNIQUE INDEX idx_users_email_lower ON public.users(LOWER(email));
+
+-- Indexes with USING clauses (btree, gin, gist, etc.)
+CREATE INDEX idx_products_description_fulltext ON public.products USING gin(to_tsvector('english', description));
+
+CREATE INDEX idx_orders_shipping_address_gist ON public.orders USING gist(shipping_address);
+
+CREATE INDEX idx_inventory_location_btree ON public.inventory USING btree(warehouse_location);
+
+-- Concurrent index creation with USING clause
+CREATE INDEX CONCURRENTLY idx_reviews_comment_fulltext ON public.reviews USING gin(to_tsvector('english', comment));

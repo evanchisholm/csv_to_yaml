@@ -385,49 +385,67 @@ class SchemaParser:
         
         Handles both single-line and multi-line ALTER TABLE statements,
         including when all ALTER TABLE statements are grouped at the end of the file.
+        Also handles cases where ALTER TABLE and ADD CONSTRAINT are on separate lines.
         """
-        # Match ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY ...
-        # Pattern handles both single-line and multi-line ALTER TABLE statements
-        # The DOTALL flag allows . to match newlines, and we handle whitespace more flexibly
-        alter_pattern = (
-            r"ALTER\s+TABLE\s+(?:(\w+)\.)?(\w+)\s+"
-            r"ADD\s+CONSTRAINT\s+(\w+)\s+"
-            r"FOREIGN\s+KEY\s*\(\s*([^)]+)\s*\)\s*"
-            r"REFERENCES\s+(?:(\w+)\.)?(\w+)\s*\(\s*([^)]+)\s*\)"
-            r"(?:\s*ON\s+DELETE\s+\w+)?\s*;?"  # Optional ON DELETE clause and semicolon
-        )
-        matches = re.finditer(alter_pattern, sql, re.IGNORECASE | re.DOTALL)
+        # Find ALTER TABLE statements - handle multi-line format including ALTER TABLE ONLY
+        alter_table_pattern = r"ALTER\s+TABLE\s+(?:ONLY\s+)?(?:(\w+)\.)?(\w+)\s+(?:IF\s+EXISTS\s+)?"
+        alter_matches = list(re.finditer(alter_table_pattern, sql, re.IGNORECASE | re.DOTALL))
 
-        for match in matches:
-            table_schema = match.group(1) or "public"
-            table_name = match.group(2)
-            constraint_name = match.group(3)
-            from_cols_str = match.group(4)
-            ref_schema = match.group(5) or "public"
-            ref_table = match.group(6)
-            to_cols_str = match.group(7)
+        for alter_match in alter_matches:
+            table_schema = alter_match.group(1) or "public"
+            table_name = alter_match.group(2)
+            alter_start = alter_match.end()
+            
+            # Look for ADD CONSTRAINT ... FOREIGN KEY ... after this ALTER TABLE
+            # This might be on the same line or following lines (within reasonable distance)
+            search_window = sql[alter_start:alter_start + 2000]  # Search within 2000 chars
+            
+            # Find ADD CONSTRAINT pattern (may be on same or next line)
+            add_constraint_match = re.search(
+                r"ADD\s+CONSTRAINT\s+(\w+)\s+",
+                search_window,
+                re.IGNORECASE | re.DOTALL
+            )
+            
+            if not add_constraint_match:
+                continue
+            
+            constraint_name = add_constraint_match.group(1)
+            constraint_start = alter_start + add_constraint_match.end()
+            
+            # Look for FOREIGN KEY after the constraint name
+            fk_search_window = sql[constraint_start:constraint_start + 1000]
+            fk_match = re.search(
+                r"FOREIGN\s+KEY\s*\(\s*([^)]+)\s*\)\s*"
+                r"REFERENCES\s+(?:(\w+)\.)?(\w+)\s*\(\s*([^)]+)\s*\)"
+                r"(?:\s+ON\s+DELETE\s+\w+)?",
+                fk_search_window,
+                re.IGNORECASE | re.DOTALL
+            )
+            
+            if fk_match:
+                from_cols_str = fk_match.group(1)
+                ref_schema = fk_match.group(2) or "public"
+                ref_table = fk_match.group(3)
+                to_cols_str = fk_match.group(4)
 
-            from_cols = [col.strip().strip('"') for col in from_cols_str.split(",")]
-            to_cols = [col.strip().strip('"') for col in to_cols_str.split(",")]
+                from_cols = [col.strip().strip('"') for col in from_cols_str.split(",")]
+                to_cols = [col.strip().strip('"') for col in to_cols_str.split(",")]
 
-            full_table_name = f"{table_schema}.{table_name}" if table_schema != "public" else table_name
-            ref_table_full = f"{ref_schema}.{ref_table}" if ref_schema != "public" else ref_table
+                full_table_name = f"{table_schema}.{table_name}" if table_schema != "public" else table_name
+                ref_table_full = f"{ref_schema}.{ref_table}" if ref_schema != "public" else ref_table
 
-            # Only add if table exists (tables should be parsed first)
-            if full_table_name in self.tables:
-                fk = ForeignKey(
-                    from_table=full_table_name,
-                    from_columns=from_cols,
-                    to_table=ref_table_full,
-                    to_columns=to_cols,
-                    constraint_name=constraint_name,
-                )
-                self.tables[full_table_name].foreign_keys.append(fk)
-                self.relationships.append(fk)
-            else:
-                # If table not found, it might be referenced before parsing - this is okay
-                # as long as tables are parsed before this method is called
-                pass
+                # Only add if table exists (tables should be parsed first)
+                if full_table_name in self.tables:
+                    fk = ForeignKey(
+                        from_table=full_table_name,
+                        from_columns=from_cols,
+                        to_table=ref_table_full,
+                        to_columns=to_cols,
+                        constraint_name=constraint_name,
+                    )
+                    self.tables[full_table_name].foreign_keys.append(fk)
+                    self.relationships.append(fk)
 
     def _parse_alter_table_check_constraints(self, sql: str) -> None:
         """Parse CHECK constraints added via ALTER TABLE statements.
@@ -478,21 +496,30 @@ class SchemaParser:
         
         Handles both single-line and multi-line CREATE INDEX statements,
         including when all CREATE INDEX statements are grouped at the end of the file.
+        Also handles USING clauses (e.g., USING btree, USING gin, USING gist).
+        PostgreSQL syntax formats:
+        - CREATE INDEX name ON table (columns)
+        - CREATE INDEX name ON table USING method (columns)
+        - CREATE INDEX name ON table USING method(expression)
         """
-        # First find CREATE INDEX statements, then extract column list with balanced parentheses
-        index_start_pattern = (
-            r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:\w+\.)?(\w+)\s+"
-            r"ON\s+(?:(\w+)\.)?(\w+)\s*\("
+        # Find CREATE INDEX statements - handle both formats
+        # Pattern 1: Standard format with columns in parentheses
+        index_pattern1 = (
+            r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:CONCURRENTLY\s+)?(?:\w+\.)?(\w+)\s+"
+            r"ON\s+(?:ONLY\s+)?(?:(\w+)\.)?(\w+)\s+"
+            r"(?:USING\s+(\w+)\s+)?"
+            r"\("
         )
-        matches = re.finditer(index_start_pattern, sql, re.IGNORECASE | re.DOTALL)
+        matches = re.finditer(index_pattern1, sql, re.IGNORECASE | re.DOTALL)
 
         for match in matches:
             index_name = match.group(1)
             schema = match.group(2) or "public"
             table_name = match.group(3)
+            using_clause = match.group(4)  # USING clause before column list
             start_pos = match.end()  # Position after opening parenthesis
             
-            # Extract column list with balanced parentheses
+            # Extract column list/expression with balanced parentheses
             paren_depth = 1
             i = start_pos
             while i < len(sql) and paren_depth > 0:
@@ -505,9 +532,56 @@ class SchemaParser:
             if paren_depth == 0:
                 columns = sql[start_pos:i-1].strip()  # Exclude the closing parenthesis
                 
+                # Check if there's a USING clause after the column list
+                if not using_clause:
+                    remaining = sql[i:i+200].strip()  # Look ahead a bit for USING clause
+                    using_match = re.match(r"^\s*USING\s+(\w+)", remaining, re.IGNORECASE)
+                    if using_match:
+                        using_clause = using_match.group(1)
+                
+                # Build index description
+                index_desc = f"{index_name} ({columns})"
+                if using_clause:
+                    index_desc += f" USING {using_clause}"
+                
                 full_table_name = f"{schema}.{table_name}" if schema != "public" else table_name
                 if full_table_name in self.tables:
-                    self.tables[full_table_name].indexes.append(f"{index_name} ({columns})")
+                    self.tables[full_table_name].indexes.append(index_desc)
+        
+        # Pattern 2: Handle USING method(expression) format where USING method directly precedes parentheses
+        index_pattern2 = (
+            r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:CONCURRENTLY\s+)?(?:\w+\.)?(\w+)\s+"
+            r"ON\s+(?:ONLY\s+)?(?:(\w+)\.)?(\w+)\s+"
+            r"USING\s+(\w+)\("
+        )
+        matches2 = re.finditer(index_pattern2, sql, re.IGNORECASE | re.DOTALL)
+
+        for match in matches2:
+            index_name = match.group(1)
+            schema = match.group(2) or "public"
+            table_name = match.group(3)
+            using_clause = match.group(4)
+            start_pos = match.end()  # Position after opening parenthesis after USING method
+            
+            # Extract expression with balanced parentheses
+            paren_depth = 1
+            i = start_pos
+            while i < len(sql) and paren_depth > 0:
+                if sql[i] == '(':
+                    paren_depth += 1
+                elif sql[i] == ')':
+                    paren_depth -= 1
+                i += 1
+            
+            if paren_depth == 0:
+                expression = sql[start_pos:i-1].strip()
+                
+                # Build index description
+                index_desc = f"{index_name} ({expression}) USING {using_clause}"
+                
+                full_table_name = f"{schema}.{table_name}" if schema != "public" else table_name
+                if full_table_name in self.tables:
+                    self.tables[full_table_name].indexes.append(index_desc)
 
     def _parse_table_comments(self, sql: str) -> None:
         """Parse COMMENT ON TABLE statements."""

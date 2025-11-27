@@ -968,14 +968,6 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
 
         lines.append("")
 
-        # Relationship Diagram (PlantUML)
-        lines.append("### Relationship Diagram\n")
-        lines.append("\nPlantUML Entity-Relationship Diagram:\n")
-        lines.append("```plantuml\n")
-        diagram_lines = _generate_plantuml_diagram(tables)
-        lines.extend(diagram_lines)
-        lines.append("```\n")
-
     doc = "\n".join(lines)
     if output_file:
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1176,16 +1168,6 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
         lines.append('</tbody>')
         lines.append('</table>')
         lines.append('')
-        
-        # Relationship Diagram (PlantUML)
-        lines.append('<h3>Relationship Diagram</h3>')
-        lines.append('<p>PlantUML Entity-Relationship Diagram:</p>')
-        lines.append('<pre>')
-        diagram_lines = _generate_plantuml_diagram(tables)
-        for line in diagram_lines:
-            line_escaped = escape_html(line)
-            lines.append(line_escaped)
-        lines.append('</pre>')
     
     # Close the wrapper div
     lines.append('</div>')

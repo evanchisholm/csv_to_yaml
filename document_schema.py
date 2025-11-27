@@ -887,8 +887,8 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
             lines.append(f"*{table.comment}*\n")
 
         lines.append("**Columns:**\n")
-        lines.append("| Column Name | Data Type | Nullable | Default | Constraints |")
-        lines.append("|-------------|-----------|----------|---------|-------------|")
+        lines.append("| Column Name | Data Type | Nullable | Default | Constraints | Eng Source | Source Field |")
+        lines.append("|-------------|-----------|----------|---------|-------------|-----------|-------------|")
 
         for col in table.columns:
             constraints = []
@@ -904,7 +904,7 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
             default = col.default_value or "-"
 
             lines.append(
-                f"| `{col.name}` | `{col.data_type}` | {nullable} | {default} | {constraints_str} |"
+                f"| `{col.name}` | `{col.data_type}` | {nullable} | {default} | {constraints_str} | - | - |"
             )
 
         lines.append("")
@@ -1042,7 +1042,7 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
         lines.append('<p><strong>Columns:</strong></p>')
         lines.append('<table class="confluenceTable">')
         lines.append('<tbody>')
-        lines.append('<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th></tr>')
+        lines.append('<tr><th class="confluenceTh">Column Name</th><th class="confluenceTh">Data Type</th><th class="confluenceTh">Nullable</th><th class="confluenceTh">Default</th><th class="confluenceTh">Constraints</th><th class="confluenceTh">Eng Source</th><th class="confluenceTh">Source Field</th></tr>')
         
         for col in table.columns:
             constraints = []
@@ -1068,6 +1068,8 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
                 f'<td class="confluenceTd">{nullable}</td>'
                 f'<td class="confluenceTd">{default}</td>'
                 f'<td class="confluenceTd">{constraints_escaped}</td>'
+                f'<td class="confluenceTd">-</td>'
+                f'<td class="confluenceTd">-</td>'
                 f'</tr>'
             )
         

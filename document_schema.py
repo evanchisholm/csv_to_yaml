@@ -610,6 +610,67 @@ def _make_anchor_id(text: str) -> str:
     return anchor
 
 
+def _generate_plantuml_diagram(tables: Dict[str, Table]) -> List[str]:
+    """Generate PlantUML entity-relationship diagram showing parent-to-child relationships."""
+    lines = []
+    
+    lines.append("@startuml")
+    lines.append("!theme plain")
+    lines.append("skinparam linetype ortho")
+    lines.append("")
+    
+    # Define all entities (tables) with their primary keys
+    for table_name in sorted(tables.keys()):
+        table = tables[table_name]
+        # Clean table name for PlantUML (remove schema prefix if present)
+        clean_name = table_name.split('.')[-1] if '.' in table_name else table_name
+        
+        lines.append(f"entity \"{clean_name}\" as {clean_name.replace('.', '_')} {{")
+        
+        # Add primary key columns
+        if table.primary_key_columns:
+            for pk_col in table.primary_key_columns:
+                # Find the column to get its type
+                col = next((c for c in table.columns if c.name == pk_col), None)
+                col_type = col.data_type if col else "INTEGER"
+                lines.append(f"  * {pk_col} : {col_type} <<PK>>")
+        
+        # Add foreign key columns (but not if they're already PKs)
+        for fk in table.foreign_keys:
+            for fk_col in fk.from_columns:
+                if fk_col not in table.primary_key_columns:
+                    # Find the column to get its type
+                    col = next((c for c in table.columns if c.name == fk_col), None)
+                    col_type = col.data_type if col else "INTEGER"
+                    lines.append(f"  - {fk_col} : {col_type} <<FK>>")
+        
+        lines.append("}")
+        lines.append("")
+    
+    # Define relationships
+    for table_name in sorted(tables.keys()):
+        table = tables[table_name]
+        from_clean = table_name.split('.')[-1] if '.' in table_name else table_name
+        from_entity = from_clean.replace('.', '_')
+        
+        for fk in sorted(table.foreign_keys, key=lambda x: x.from_columns[0]):
+            to_clean = fk.to_table.split('.')[-1] if '.' in fk.to_table else fk.to_table
+            to_entity = to_clean.replace('.', '_')
+            
+            from_cols = ", ".join(fk.from_columns)
+            to_cols = ", ".join(fk.to_columns)
+            
+            # Determine relationship cardinality
+            # For now, use many-to-one (child to parent)
+            # Format: Entity1 ||--o{ Entity2 (one-to-many from parent to child)
+            lines.append(f"{to_entity} ||--o{{ {from_entity} : \"{from_cols} → {to_cols}\"")
+    
+    lines.append("")
+    lines.append("@enduml")
+    
+    return lines
+
+
 def _build_relationship_tree(tables: Dict[str, Table]) -> Dict[str, List[tuple]]:
     """Build a tree structure of parent-to-child relationships.
     
@@ -907,11 +968,11 @@ def generate_documentation(tables: Dict[str, Table], output_file: Optional[Path]
 
         lines.append("")
 
-        # Relationship Diagram (ASCII art)
+        # Relationship Diagram (PlantUML)
         lines.append("### Relationship Diagram\n")
-        lines.append("\nParent-to-Child Relationships:\n")
-        lines.append("```\n")
-        diagram_lines = _generate_ascii_relationship_diagram(tables)
+        lines.append("\nPlantUML Entity-Relationship Diagram:\n")
+        lines.append("```plantuml\n")
+        diagram_lines = _generate_plantuml_diagram(tables)
         lines.extend(diagram_lines)
         lines.append("```\n")
 
@@ -1116,11 +1177,11 @@ def generate_confluence_documentation(tables: Dict[str, Table], output_file: Opt
         lines.append('</table>')
         lines.append('')
         
-        # Relationship Diagram (ASCII art)
+        # Relationship Diagram (PlantUML)
         lines.append('<h3>Relationship Diagram</h3>')
-        lines.append('<p>Parent-to-Child Relationships:</p>')
+        lines.append('<p>PlantUML Entity-Relationship Diagram:</p>')
         lines.append('<pre>')
-        diagram_lines = _generate_ascii_relationship_diagram(tables)
+        diagram_lines = _generate_plantuml_diagram(tables)
         for line in diagram_lines:
             line_escaped = escape_html(line)
             lines.append(line_escaped)

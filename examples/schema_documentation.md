@@ -338,26 +338,68 @@ This schema contains **9** table(s):
 ### Relationship Diagram
 
 
-Parent-to-Child Relationships:
+PlantUML Entity-Relationship Diagram:
 
-```
+```plantuml
 
-categories
-    ├── categories (parent_category_id → category_id)
-│   ... (see above)
-    └── products (category_id → category_id)
-    products
-    ├── inventory (product_id → product_id)
-    ├── order_items (product_id → product_id)
-    └── reviews (product_id → product_id)
+@startuml
+!theme plain
+skinparam linetype ortho
 
-users
-    ├── addresses (user_id → user_id)
-    ├── orders (user_id → user_id)
-│   orders
-│   │   └── order_items (order_id → order_id)
-    └── reviews (user_id → user_id)
+entity "addresses" as addresses {
+  * address_id : SERIAL <<PK>>
+  - user_id : UUID <<FK>>
+}
 
-Standalone tables (no relationships):
-discounts
+entity "categories" as categories {
+  * category_id : SERIAL <<PK>>
+  - parent_category_id : INTEGER <<FK>>
+}
+
+entity "discounts" as discounts {
+  * discount_id : SERIAL <<PK>>
+}
+
+entity "inventory" as inventory {
+  * inventory_id : SERIAL <<PK>>
+  - product_id : INTEGER <<FK>>
+}
+
+entity "order_items" as order_items {
+  * order_item_id : SERIAL <<PK>>
+  - order_id : INTEGER <<FK>>
+  - product_id : INTEGER <<FK>>
+}
+
+entity "orders" as orders {
+  * order_id : SERIAL <<PK>>
+  - user_id : UUID <<FK>>
+}
+
+entity "products" as products {
+  * product_id : SERIAL <<PK>>
+  - category_id : INTEGER <<FK>>
+}
+
+entity "reviews" as reviews {
+  * review_id : SERIAL <<PK>>
+  - product_id : INTEGER <<FK>>
+  - user_id : UUID <<FK>>
+}
+
+entity "users" as users {
+  * user_id : UUID <<PK>>
+}
+
+users ||--o{ addresses : "user_id → user_id"
+categories ||--o{ categories : "parent_category_id → category_id"
+products ||--o{ inventory : "product_id → product_id"
+orders ||--o{ order_items : "order_id → order_id"
+products ||--o{ order_items : "product_id → product_id"
+users ||--o{ orders : "user_id → user_id"
+categories ||--o{ products : "category_id → category_id"
+products ||--o{ reviews : "product_id → product_id"
+users ||--o{ reviews : "user_id → user_id"
+
+@enduml
 ```

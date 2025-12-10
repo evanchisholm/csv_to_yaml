@@ -1,0 +1,93 @@
+@startuml
+title Topology – melbourne
+skinparam shadowing false
+skinparam defaultTextAlignment left
+skinparam packageStyle rectangle
+legend left
+== Hypervisor Colors ==
+|<back:#CCE5FF> hypervisor-01 </back>| #CCE5FF |
+|<back:#D4EDDA> hypervisor-02 </back>| #D4EDDA |
+== Network Roles ==
+| management | VLAN 10 | 10.0.0.0/24 |
+| application | VLAN 20 | 10.0.20.0/24 |
+| storage | VLAN 30 | 10.0.30.0/24 |
+== Storage Pools ==
+| san-shared | san | 8000 GB |
+== Security Devices ==
+| edge-fw | firewall | perimeter |
+| app-lb | load_balancer | http_lb |
+| api-gw | api_gateway | public_api |
+== Application Domains ==
+|<back:#CCE5FF> devtools </back>| app domain |
+|<back:#FFDDBB> infrastructure </back>| app domain |
+|<back:#E0E0E0> operations </back>| app domain |
+== Databases ==
+| gitlab-db | postgresql 14 |
+| netbox-db | postgresql 14 |
+endlegend
+
+package "Network Layer" {
+  cloud "mgmt-net - 10.0.0.0/24 - VLAN 10 - management" as net_mgmt_net
+  cloud "vm-net - 10.0.20.0/24 - VLAN 20 - application" as net_vm_net
+  cloud "storage-net - 10.0.30.0/24 - VLAN 30 - storage" as net_storage_net
+  cloud "Internet" as net_internet
+}
+
+package "Security Layer" {
+  rectangle "edge-fw\ntype: firewall\nrole: perimeter" as sec_edge_fw #FFEECC
+  rectangle "app-lb\ntype: load_balancer\nrole: http_lb" as sec_app_lb #FFEECC
+  rectangle "api-gw\ntype: api_gateway\nrole: public_api" as sec_api_gw #FFEECC
+}
+
+package "Compute Layer" {
+  package "hypervisor-01\nCPU: 16.0 (VMs: 12.0, 75.0%)\nRAM: 128.0 GB (VMs: 48.0 GB, 37.5%)\nStorage: 2000.0 GB (VMs: 300.0 GB, 15.0%)" as hv_hypervisor_01 #CCE5FF {
+    node "vm-gitlab\nOS: ubuntu-24.04\nCPU: 8\nRAM: 32 GB\nDisk: 200 GB" as vm_vm_gitlab
+    node "vm-netbox\nOS: ubuntu-22.04\nCPU: 4\nRAM: 16 GB\nDisk: 100 GB" as vm_vm_netbox
+  }
+  package "hypervisor-02\nCPU: 32.0 (VMs: 8.0, 25.0%)\nRAM: 256.0 GB (VMs: 20.0 GB, 7.8%)\nStorage: 4000.0 GB (VMs: 200.0 GB, 5.0%)" as hv_hypervisor_02 #D4EDDA {
+    node "vm-runner\nOS: rocky-9\nCPU: 4\nRAM: 8 GB\nDisk: 50 GB" as vm_vm_runner
+    node "vm-zabbix\nOS: ubuntu-22.04\nCPU: 4\nRAM: 12 GB\nDisk: 150 GB" as vm_vm_zabbix
+  }
+}
+
+package "Storage Layer" {
+  database "san-shared\ntype: san\nsize: 8000 GB" as sp_san_shared
+}
+
+package "Application Layer" {
+  component "gitlab\nrole: scm\ntier: ui\nSource control and CI/CD\nports: 80, 443, 22\ntech: Ruby, PostgreSQL, Redis" as app_gitlab #CCE5FF
+  component "netbox\nrole: cmdb\ntier: app\nSource of truth for infra\nports: 8000\ntech: Python, Django, PostgreSQL" as app_netbox #FFDDBB
+  component "zabbix\nrole: monitoring\ntier: app\nMonitoring, metrics, alerting\nports: 8080, 10051\ntech: PHP, MySQL" as app_zabbix #E0E0E0
+  component "gitlab-runner\nrole: agent\ntier: worker\nGitLab CI job executor\ntech: Go" as app_gitlab_runner #CCE5FF
+}
+
+vm_vm_gitlab --> net_mgmt_net : "10.0.0.11"
+vm_vm_gitlab --> net_vm_net : "10.0.20.11"
+vm_vm_netbox --> net_mgmt_net : "10.0.0.12"
+vm_vm_netbox --> net_vm_net : "10.0.20.12"
+vm_vm_runner --> net_mgmt_net : "10.0.0.21"
+vm_vm_runner --> net_vm_net : "10.0.20.21"
+vm_vm_zabbix --> net_mgmt_net : "10.0.0.22"
+vm_vm_zabbix --> net_vm_net : "10.0.20.22"
+vm_vm_zabbix --> net_storage_net : "10.0.30.22"
+vm_vm_gitlab ..> sp_san_shared : storage
+vm_vm_netbox ..> sp_san_shared : storage
+vm_vm_runner ..> sp_san_shared : storage
+vm_vm_zabbix ..> sp_san_shared : storage
+hv_hypervisor_01 ..> sp_san_shared : uses
+hv_hypervisor_02 ..> sp_san_shared : uses
+app_gitlab --> vm_vm_gitlab : hosted on
+app_netbox --> vm_vm_netbox : hosted on
+app_zabbix --> vm_vm_zabbix : hosted on
+app_gitlab_runner --> vm_vm_runner : hosted on
+app_gitlab ..> app_netbox : depends on
+app_gitlab ..> app_zabbix : depends on
+app_zabbix ..> app_netbox : depends on
+app_gitlab_runner ..> app_gitlab : depends on
+net_internet --> sec_edge_fw
+sec_edge_fw --> net_vm_net
+net_internet --> sec_app_lb
+sec_app_lb --> net_vm_net
+net_internet --> sec_api_gw
+sec_api_gw --> net_vm_net
+@enduml

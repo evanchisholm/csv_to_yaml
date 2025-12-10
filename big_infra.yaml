@@ -1,0 +1,222 @@
+sites:
+  - name: melbourne
+
+    # =========================
+    # NETWORK LAYER
+    # =========================
+    networks:
+      - name: mgmt-net
+        cidr: 10.0.0.0/24
+        vlan: 10
+        role: management
+
+      - name: vm-net
+        cidr: 10.0.20.0/24
+        vlan: 20
+        role: application
+
+      - name: storage-net
+        cidr: 10.0.30.0/24
+        vlan: 30
+        role: storage
+
+    # Optional security devices (live mostly between users and vm-net)
+    security_devices:
+      - name: edge-fw
+        type: firewall
+        role: perimeter
+        protects_networks: [vm-net, mgmt-net]
+        inline_between: ["internet", "vm-net"]
+
+      - name: app-lb
+        type: load_balancer
+        role: http_lb
+        front_network: "internet"
+        back_network: "vm-net"
+
+      - name: api-gw
+        type: api_gateway
+        role: public_api
+        front_network: "internet"
+        back_network: "vm-net"
+
+    # =========================
+    # STORAGE LAYER
+    # =========================
+    storage_pools:
+      - name: san-shared
+        type: san
+        size_gb: 8000
+        hypervisors: [hypervisor-01, hypervisor-02]
+
+    # =========================
+    # COMPUTE LAYER
+    # =========================
+    hypervisors:
+      - name: hypervisor-01
+        color: "#CCE5FF"
+        cpu: 16
+        ram_gb: 128
+        storage_gb: 2000
+        vms:
+          - name: vm-gitlab
+            os: ubuntu-24.04
+            cpu: 8
+            ram_gb: 32
+            storage_gb: 200
+            storage_pool: san-shared
+            networks:
+              - name: mgmt-net
+                ip: 10.0.0.11
+              - name: vm-net
+                ip: 10.0.20.11
+
+          - name: vm-netbox
+            os: ubuntu-22.04
+            cpu: 4
+            ram_gb: 16
+            storage_gb: 100
+            storage_pool: san-shared
+            networks:
+              - name: mgmt-net
+                ip: 10.0.0.12
+              - name: vm-net
+                ip: 10.0.20.12
+
+      - name: hypervisor-02
+        color: "#D4EDDA"
+        cpu: 32
+        ram_gb: 256
+        storage_gb: 4000
+        vms:
+          - name: vm-runner
+            os: rocky-9
+            cpu: 4
+            ram_gb: 8
+            storage_gb: 50
+            storage_pool: san-shared
+            networks:
+              - name: mgmt-net
+                ip: 10.0.0.21
+              - name: vm-net
+                ip: 10.0.20.21
+
+          - name: vm-zabbix
+            os: ubuntu-22.04
+            cpu: 4
+            ram_gb: 12
+            storage_gb: 150
+            storage_pool: san-shared
+            networks:
+              - name: mgmt-net
+                ip: 10.0.0.22
+              - name: vm-net
+                ip: 10.0.20.22
+              - name: storage-net
+                ip: 10.0.30.22
+
+    # =========================
+    # APPLICATION LAYER
+    # =========================
+    applications:
+      - name: gitlab
+        role: scm
+        description: "Source control and CI/CD"
+        hosted_on: vm-gitlab
+        exposed_ports: [80, 443, 22]
+        depends_on: [netbox, zabbix]
+        domain: devtools
+        tier: ui
+        tech_stack: ["Ruby", "PostgreSQL", "Redis"]
+
+      - name: netbox
+        role: cmdb
+        description: "Source of truth for infra"
+        hosted_on: vm-netbox
+        exposed_ports: [8000]
+        depends_on: []
+        domain: infrastructure
+        tier: app
+        tech_stack: ["Python", "Django", "PostgreSQL"]
+
+      - name: zabbix
+        role: monitoring
+        description: "Monitoring, metrics, alerting"
+        hosted_on: vm-zabbix
+        exposed_ports: [8080, 10051]
+        depends_on: [netbox]
+        domain: operations
+        tier: app
+        tech_stack: ["PHP", "MySQL"]
+
+      - name: gitlab-runner
+        role: agent
+        description: "GitLab CI job executor"
+        hosted_on: vm-runner
+        depends_on: [gitlab]
+        domain: devtools
+        tier: worker
+        tech_stack: ["Go"]
+
+    # =========================
+    # DATABASES
+    # =========================
+    databases:
+      - name: gitlab-db
+        engine: postgresql
+        version: "14"
+        host_vm: vm-gitlab
+        schema:
+          tables:
+            - name: projects
+              columns:
+                - name: id
+                  type: uuid
+                  pk: true
+                - name: name
+                  type: text
+                - name: namespace_id
+                  type: uuid
+              indexes:
+                - name: projects_pkey
+                  columns: [id]
+
+      - name: netbox-db
+        engine: postgresql
+        version: "14"
+        host_vm: vm-netbox
+        schema:
+          tables:
+            - name: dcim_device
+              columns:
+                - name: id
+                  type: integer
+                  pk: true
+                - name: name
+                  type: text
+                - name: site_id
+                  type: integer
+
+    # =========================
+    # FLOWS (SEQUENCE DIAGRAMS)
+    # =========================
+    flows:
+      - name: ci_pipeline
+        description: "Developer pushes, GitLab builds, Runner executes, NetBox updated, Zabbix monitors"
+        participants: [Developer, gitlab, gitlab-runner, netbox, zabbix]
+        steps:
+          - from: Developer
+            to: gitlab
+            message: "git push / merge request"
+
+          - from: gitlab
+            to: gitlab-runner
+            message: "trigger CI job"
+
+          - from: gitlab-runner
+            to: netbox
+            message: "call API to sync infra data"
+
+          - from: zabbix
+            to: gitlab
+            message: "send alert via webhook"

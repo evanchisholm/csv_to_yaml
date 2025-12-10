@@ -1,0 +1,29 @@
+@startuml
+title Microservice / Application Dependencies – melbourne
+skinparam componentStyle rectangle
+skinparam shadowing false
+legend left
+== Domains ==
+|<back:#CCE5FF> devtools </back>| domain |
+|<back:#FFDDBB> infrastructure </back>| domain |
+|<back:#E0E0E0> operations </back>| domain |
+endlegend
+
+package "devtools" #CCE5FF {
+  component "gitlab\ntier: ui\nrole: scm" as app_gitlab
+  component "gitlab-runner\ntier: worker\nrole: agent" as app_gitlab_runner
+}
+
+package "infrastructure" #FFDDBB {
+  component "netbox\ntier: app\nrole: cmdb" as app_netbox
+}
+
+package "operations" #E0E0E0 {
+  component "zabbix\ntier: app\nrole: monitoring" as app_zabbix
+}
+
+app_gitlab --> app_netbox
+app_gitlab --> app_zabbix
+app_zabbix --> app_netbox
+app_gitlab_runner --> app_gitlab
+@enduml

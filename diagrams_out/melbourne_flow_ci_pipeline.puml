@@ -1,0 +1,14 @@
+@startuml
+title Flow – ci_pipeline (melbourne)
+skinparam shadowing false
+actor actor_Developer as "Developer"
+participant app_gitlab as "gitlab"
+participant app_gitlab_runner as "gitlab-runner"
+participant app_netbox as "netbox"
+participant app_zabbix as "zabbix"
+
+actor_Developer -> app_gitlab : git push / merge request
+app_gitlab -> app_gitlab_runner : trigger CI job
+app_gitlab_runner -> app_netbox : call API to sync infra data
+app_zabbix -> app_gitlab : send alert via webhook
+@enduml

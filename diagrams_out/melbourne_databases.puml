@@ -1,0 +1,21 @@
+@startuml
+title Database Schemas – melbourne
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+package "gitlab-db\npostgresql 14" as db_gitlab_db {
+  class gitlab_db_projects {
+    id : uuid <<PK>>
+    name : text
+    namespace_id : uuid
+  }
+}
+
+package "netbox-db\npostgresql 14" as db_netbox_db {
+  class netbox_db_dcim_device {
+    id : integer <<PK>>
+    name : text
+    site_id : integer
+  }
+}
+
+@enduml
